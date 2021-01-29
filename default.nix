@@ -68,7 +68,7 @@ let
 
   jupyterEnvironment =
     jupyter.jupyterlabWith {
-      kernels = [ iPythonWithPackages juniper ];
+      kernels = [ iPythonWithPackages ];
 
       extraPackages = p: [
         # needed by jupyterlab-launch
