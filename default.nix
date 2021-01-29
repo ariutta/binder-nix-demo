@@ -3,11 +3,7 @@ with pkgs.lib.strings;
 let
   # This property is just for jupyter server extensions, but it is
   # OK if the server extension includes a lab extension.
-  serverextensions = p: with p; [
-    jupytext
-    # look into getting jupyterlab-lsp working:
-    # https://github.com/krassowski/jupyterlab-lsp
-  ];
+  serverextensions = p: with p; [];
 
   mynixpkgs = import (fetchFromGitHub {
     owner = "ariutta";
@@ -36,7 +32,7 @@ let
       #"jupyterlab_vim"
     ];
     serverextensions = serverextensions;
-    overlays = [];
+    overlays = [ (import ./python-overlay.nix) ];
   };
 
   #########################
@@ -68,21 +64,21 @@ let
 
       extraPackages = p: [
         # needed by jupyterlab-launch
-        p.ps
-        p.lsof
+        #p.ps
+        #p.lsof
 
         # needed to make server extensions work
         myPython
 
         # TODO: do we still need these for lab extensions?
-        nodejs
-        yarn
+        #nodejs
+        #yarn
 
       ];
     };
 in
   jupyterEnvironment.env.overrideAttrs (oldAttrs: {
-    shellHook = oldAttrs.shellHook + ''
-    . "${mynixpkgs.jupyterlab-connect}"/share/bash-completion/completions/jupyterlab-connect.bash
-    '';
+    #shellHook = oldAttrs.shellHook + ''
+    #. "${mynixpkgs.jupyterlab-connect}"/share/bash-completion/completions/jupyterlab-connect.bash
+    #'';
   })

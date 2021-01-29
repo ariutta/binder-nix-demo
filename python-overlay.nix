@@ -13,7 +13,7 @@ let
 in
 
 {
-  python3 = pkgs.python38.override (old: {
+  python3 = pkgs.python3.override (old: {
     packageOverrides =
       pkgs.lib.composeExtensions
         (old.packageOverrides or (_: _: {}))
