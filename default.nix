@@ -40,7 +40,7 @@ let
 
     ];
     serverextensions = serverextensions;
-    overlays = [ (import ./python-overlay.nix) ];
+    overlays = [];
   };
 
   #########################
