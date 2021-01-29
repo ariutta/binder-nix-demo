@@ -1,4 +1,4 @@
-with import <nixpkgs> {};
+with import <nixpkgs> { overlays = [ (import ./python-overlay.nix) ]; };
 with pkgs.lib.strings;
 let
   # This property is just for jupyter server extensions, but it is
@@ -33,11 +33,7 @@ let
     # this corresponds to notebook_dir (impure)
     directory = toString ./.;
     labextensions = [
-      "jupyterlab_vim"
-
-      # TODO: this may have been needed for bokeh. Can I remove it?
-      "@jupyter-widgets/jupyterlab-manager"
-
+      #"jupyterlab_vim"
     ];
     serverextensions = serverextensions;
     overlays = [];
@@ -48,8 +44,8 @@ let
   #########################
 
   myPythonPackages = (p: (with p; [
-    numpy
-    pandas
+    #numpy
+    #pandas
   ]) ++
   # TODO: it would be nice not have to specify serverextensions here, but the
   # current jupyterLab code needs it to be specified both here and above.
@@ -74,7 +70,6 @@ let
         # needed by jupyterlab-launch
         p.ps
         p.lsof
-        p.re2
 
         # needed to make server extensions work
         myPython
@@ -82,14 +77,6 @@ let
         # TODO: do we still need these for lab extensions?
         nodejs
         yarn
-
-        # for nbconvert
-        pandoc
-        # see https://github.com/jupyter/nbconvert/issues/808
-        #tectonic
-        # more info: https://nixos.wiki/wiki/TexLive
-        texlive.combined.scheme-full
-        mynixpkgs.jupyterlab-connect
 
       ];
     };
