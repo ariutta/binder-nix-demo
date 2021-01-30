@@ -29,6 +29,8 @@ let
     jupyter.jupyterlabWith {
       kernels = [ iPython ];
       extraPackages = p: [p.pandoc];
+      extraJupyterPath = pkgs:
+        "${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages";
     };
 in
   jupyterEnvironment.env
