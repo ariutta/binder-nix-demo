@@ -22,12 +22,13 @@ let
 
   iPython = jupyter.kernels.iPythonWith {
     name = "python";
-    packages = p: with p; [ numpy ];
+    packages = p: with p; [ numpy pandas ];
   };
 
   jupyterEnvironment =
     jupyter.jupyterlabWith {
       kernels = [ iPython ];
+      extraPackages = p: [p.pandoc];
     };
 in
   jupyterEnvironment.env
