@@ -6,7 +6,7 @@ let
 
   iPython = jupyter.kernels.iPythonWith {
     name = "python";
-    packages = p: with p; [ numpy pandas ];
+    packages = p: with p; [ requests ];
   };
 
   jupyterEnvironment =
