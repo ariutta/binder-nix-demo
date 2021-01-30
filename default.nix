@@ -22,7 +22,7 @@ let
 
   iPython = jupyter.kernels.iPythonWith {
     name = "python";
-    packages = p: with p; [ ];
+    packages = p: with p; [ numpy ];
   };
 
   jupyterEnvironment =
