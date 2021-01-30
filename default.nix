@@ -1,10 +1,20 @@
-{ pkgs ? import <nixpkgs> { }, pythonPackages ? pkgs.python3Packages }:
-
-pkgs.mkShell {
+with import <nixpkgs> {};
+let
+  pythonEnv = python38.withPackages (ps: [
+    ps.numpy
+    ps.toolz
+    ps.numpy
+    ps.scipy
+    ps.jupyterlab
+  ]);
+in mkShell {
   buildInputs = [
-     pythonPackages.numpy
-     pythonPackages.scipy
-     pythonPackages.jupyterlab
-  ];
+    pythonEnv
 
+    black
+    mypy
+
+    libffi
+    openssl
+  ];
 }
