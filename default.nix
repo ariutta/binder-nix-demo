@@ -5,6 +5,11 @@ let
     rev = "35eb565c6d00f3c61ef5e74e7e41870cfa3926f7";
   };
 
+  mynixpkgs = import (builtins.fetchGit {
+    url = https://github.com/ariutta/mynixpkgs;
+    rev = "f2971b217022189a7ca9a77f82211fa345100524";
+  });
+
   # Importing overlays from that path.
   overlays = [
     # Only necessary for Haskell kernel
@@ -49,16 +54,17 @@ let
     rPackages = pkgs.rPackages;
   };
 
-  juniper = jupyter.kernels.juniperWith {
-    # Identifier that will appear on the Jupyter interface.
-    name = "JuniperKernel";
-    # Libraries (R packages) to be available to the kernel.
-    packages = myRPackages;
-    # Optional definition of `rPackages` to be used.
-    # Useful for overlaying packages.
-    # TODO: why not just do this in overlays above?
-    #rPackages = pkgs.rPackages;
-  };
+#  # juniper doesn't work anymore, it appears
+#  juniper = jupyter.kernels.juniperWith {
+#    # Identifier that will appear on the Jupyter interface.
+#    name = "JuniperKernel";
+#    # Libraries (R packages) to be available to the kernel.
+#    packages = myRPackages;
+#    # Optional definition of `rPackages` to be used.
+#    # Useful for overlaying packages.
+#    # TODO: why not just do this in overlays above?
+#    #rPackages = pkgs.rPackages;
+#  };
 
   #########################
   # Python
@@ -127,13 +133,9 @@ let
         p.ps
         p.lsof
 
-        p.imagemagick
-
         # optionals below
-        #myR
 
-        # needed to make server extensions work
-        #myPython
+        p.imagemagick
 
         # TODO: do we still need these for lab extensions?
         p.nodejs
@@ -145,7 +147,7 @@ let
         #tectonic
         # more info: https://nixos.wiki/wiki/TexLive
         p.texlive.combined.scheme-full
-        #mynixpkgs.jupyterlab-connect
+        mynixpkgs.jupyterlab-connect
 
         # to run AutoML Vision
         p.google-cloud-sdk
@@ -161,4 +163,9 @@ let
         "${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages";
     };
 in
-  jupyterEnvironment.env
+  #jupyterEnvironment.env
+  jupyterEnvironment.env.overrideAttrs (oldAttrs: {
+    shellHook = oldAttrs.shellHook + ''
+    . "${mynixpkgs.jupyterlab-connect}"/share/bash-completion/completions/jupyterlab-connect.bash
+    '';
+  })
