@@ -12,13 +12,14 @@ let
 
   # Importing overlays from that path.
   overlays = [
+    # my custom python overlays
+    (import ./python-overlay.nix)
+    # jupyterWith overlays
     # Only necessary for Haskell kernel
     (import "${jupyterWithPath}/nix/haskell-overlay.nix")
     # Necessary for Jupyter
     (import "${jupyterWithPath}/nix/python-overlay.nix")
     (import "${jupyterWithPath}/nix/overlay.nix")
-    # plus my custom python overlays
-    (import ./python-overlay.nix)
   ];
 
   # Your Nixpkgs snapshot, with JupyterWith packages.
@@ -164,6 +165,7 @@ let
     };
 in
   #jupyterEnvironment.env
+
   jupyterEnvironment.env.overrideAttrs (oldAttrs: {
     shellHook = oldAttrs.shellHook + ''
     . "${mynixpkgs.jupyterlab-connect}"/share/bash-completion/completions/jupyterlab-connect.bash
