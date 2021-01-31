@@ -13,4 +13,6 @@ nix-prefetch-git https://github.com/nixos/nixpkgs.git refs/heads/nixos-unstable 
 TODO:
 
 - Try adding jupytext ([doc](https://github.com/tweag/jupyterWith#adding-packages-to-the-jupyter-path))
-- Try to get my build system for jupyterlab extensions (JS) working.
+- What exactly does it mean to [use it as an overlay](https://github.com/tweag/jupyterWith#using-as-an-overlay)?
+- Try to get my build system for jupyterlab extensions (JS) working. See also [what jupyterWith says](https://github.com/tweag/jupyterWith#using-jupyterlab-extensions) about how they do this and [why](https://github.com/tweag/jupyterWith#about-extensions).
+- Add the rest of the dependencies I have in pathway-figure-ocr.

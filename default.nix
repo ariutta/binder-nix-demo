@@ -12,6 +12,8 @@ let
     # Necessary for Jupyter
     (import "${jupyterWithPath}/nix/python-overlay.nix")
     (import "${jupyterWithPath}/nix/overlay.nix")
+    # plus my custom python overlays
+    (import ./python-overlay.nix)
   ];
 
   # Your Nixpkgs snapshot, with JupyterWith packages.
@@ -20,9 +22,91 @@ let
   # From here, everything happens as in other examples.
   jupyter = pkgs.jupyterWith;
 
+  #########################
+  # R
+  #########################
+
+  myRPackages = p: with p; [
+    pacman
+    dplyr
+    ggplot2
+    knitr
+    purrr
+    readr
+    stringr
+    tidyr
+  ];
+
+  myR = [ pkgs.R ] ++ (myRPackages pkgs.rPackages);
+
+  juniper = jupyter.kernels.juniperWith {
+    # Identifier that will appear on the Jupyter interface.
+    name = "JuniperKernel";
+    # Libraries (R packages) to be available to the kernel.
+    packages = myRPackages;
+    # Optional definition of `rPackages` to be used.
+    # Useful for overlaying packages.
+    # TODO: why not just do this in overlays above?
+    #rPackages = pkgs.rPackages;
+  };
+
+  #########################
+  # Python
+  #########################
+
   iPython = jupyter.kernels.iPythonWith {
-    name = "python";
-    packages = p: with p; [ numpy pandas ];
+    name = "ariPython";
+    packages = p: with p; [
+      numpy
+      pandas
+
+      # TODO: the following are not serverextensions, but they ARE specifically
+      # intended for augmenting jupyter. Where should we specify them?
+
+      # TODO: compare nb_black with https://github.com/ryantam626/jupyterlab_code_formatter
+      nb_black
+
+      beautifulsoup4
+      soupsieve
+
+      nbconvert
+      seaborn
+
+      requests
+      requests-cache
+
+      #google_api_core
+      #google_cloud_core
+      #google-cloud-sdk
+      #google_cloud_testutils
+      #google_cloud_automl
+      #google_cloud_storage
+
+      # tzlocal is needed to make rpy2 work
+      tzlocal
+      rpy2
+
+      pyahocorasick
+      spacy
+
+      unidecode
+      homoglyphs
+      confusable-homoglyphs
+
+      # Python interface to the libmagic file type identification library
+      python_magic
+      # python bindings for imagemagick
+      Wand
+      # Python Imaging Library
+      pillow
+
+      # fix encodings
+      ftfy
+
+      lxml
+      wikidata2df
+      skosmos_client
+    ];
   };
 
   jupyterEnvironment =
