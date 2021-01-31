@@ -39,6 +39,16 @@ let
 
   myR = [ pkgs.R ] ++ (myRPackages pkgs.rPackages);
 
+  irkernel = jupyter.kernels.iRWith {
+    # Identifier that will appear on the Jupyter interface.
+    name = "irkernel";
+    # Libraries to be available to the kernel.
+    packages = myRPackages;
+    # Optional definition of `rPackages` to be used.
+    # Useful for overlaying packages.
+    rPackages = pkgs.rPackages;
+  };
+
   juniper = jupyter.kernels.juniperWith {
     # Identifier that will appear on the Jupyter interface.
     name = "JuniperKernel";
@@ -55,7 +65,7 @@ let
   #########################
 
   iPython = jupyter.kernels.iPythonWith {
-    name = "ariPython";
+    name = "iPython";
     packages = p: with p; [
       numpy
       pandas
@@ -111,8 +121,42 @@ let
 
   jupyterEnvironment =
     jupyter.jupyterlabWith {
-      kernels = [ iPython ];
-      extraPackages = p: [p.pandoc];
+      kernels = [ iPython irkernel ];
+      extraPackages = p: [
+        # needed by jupyterlab-launch
+        p.ps
+        p.lsof
+
+        p.imagemagick
+
+        # optionals below
+        #myR
+
+        # needed to make server extensions work
+        #myPython
+
+        # TODO: do we still need these for lab extensions?
+        p.nodejs
+        p.yarn
+
+        # for nbconvert
+        p.pandoc
+        # see https://github.com/jupyter/nbconvert/issues/808
+        #tectonic
+        # more info: https://nixos.wiki/wiki/TexLive
+        p.texlive.combined.scheme-full
+        #mynixpkgs.jupyterlab-connect
+
+        # to run AutoML Vision
+        p.google-cloud-sdk
+
+        p.exiftool
+
+        # to get perceptual hash values of images
+        # p.phash
+        p.blockhash
+      ];
+
       extraJupyterPath = pkgs:
         "${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages";
     };
