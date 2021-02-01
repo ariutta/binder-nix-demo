@@ -5,7 +5,7 @@ let
 in
 
 buildPythonPackage rec {
-  pname = "jupyter_packaging";
+  pname = "jupyter-packaging";
   version = "0.7.11";
   name = "${pname}-${version}";
 
