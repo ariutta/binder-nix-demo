@@ -164,8 +164,6 @@ let
         "${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages";
     };
 in
-  #jupyterEnvironment.env
-
   jupyterEnvironment.env.overrideAttrs (oldAttrs: {
     shellHook = oldAttrs.shellHook + ''
     . "${mynixpkgs.jupyterlab-connect}"/share/bash-completion/completions/jupyterlab-connect.bash
