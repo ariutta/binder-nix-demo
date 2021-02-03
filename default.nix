@@ -1,4 +1,6 @@
 let
+  rootDirectoryImpure = ".";
+  shareDirectoryImpure = "${rootDirectoryImpure}/share-jupyter";
   # Path to the JupyterWith folder.
   jupyterWithPath = builtins.fetchGit {
     url = https://github.com/tweag/jupyterWith;
@@ -130,6 +132,7 @@ let
 
   jupyterEnvironment =
     jupyter.jupyterlabWith {
+      directory = shareDirectoryImpure;
       kernels = [ iPython irkernel ];
       extraPackages = p: [
         # needed by jupyterlab-launch
@@ -190,5 +193,31 @@ in
 
     # set SOURCE_DATE_EPOCH so that we can use python wheels
     SOURCE_DATE_EPOCH=$(date +%s)
+
+    export JUPYTER_CONFIG_DIR="${shareDirectoryImpure}/config"
+    export JUPYTER_DATA_DIR="${shareDirectoryImpure}/data"
+    export JUPYTER_RUNTIME_DIR="${shareDirectoryImpure}/runtime"
+    export JUPYTERLAB_DIR="${shareDirectoryImpure}/lab"
+
+    if [ ! -d "${shareDirectoryImpure}" ]; then
+      mkdir -p "$JUPYTER_CONFIG_DIR"
+      mkdir -p "$JUPYTER_DATA_DIR"
+      mkdir -p "$JUPYTER_RUNTIME_DIR"
+      mkdir -p "$JUPYTERLAB_DIR"/extensions
+      # We need to set root_dir in config so that this command:
+      #   direnv exec ~/Documents/myenv jupyter lab start
+      # always results in root_dir being ~/Documents/myenv.
+      # If we don't, then running that command from $HOME makes root_dir be $HOME.
+      # TODO: what is the filename supposed to be?
+      #   jupyter_server_config.json
+      #   jupyter_notebook_config.json
+      #   jupyter_config.json
+      #   jupyter_notebook_config.py
+      if [ -f "$JUPYTER_CONFIG_DIR/jupyter_notebook_config.json" ]; then
+        echo "File already exists: $JUPYTER_CONFIG_DIR/jupyter_notebook_config.json" >/dev/stderr
+        exit 1
+      fi
+      echo '{"NotebookApp": {"root_dir": "${rootDirectoryImpure}"}}' >"$JUPYTER_CONFIG_DIR/jupyter_notebook_config.json"
+    fi
     '';
   })
