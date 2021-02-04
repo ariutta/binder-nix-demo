@@ -1,8 +1,4 @@
-{ stdenv, python3 }:
-
-let
-  inherit (python3.pkgs) buildPythonPackage fetchPypi;
-in
+{ lib, buildPythonPackage, fetchPypi, pytestrunner, pandas, requests }:
 
 buildPythonPackage rec {
   pname = "wikidata2df";
@@ -83,14 +79,14 @@ buildPythonPackage rec {
 #    "test_fake_query"
 #  ];
 
-  nativeBuildInputs = with python3.pkgs; [pytestrunner];
+  nativeBuildInputs = [pytestrunner];
 
-  propagatedBuildInputs = with python3.pkgs; [
+  propagatedBuildInputs = [
     pandas
     requests
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Utility package for easily turning a SPARQL query into a dataframe";
     homepage = "https://pypi.org/project/wikidata2df/";
     license = licenses.bsd3;

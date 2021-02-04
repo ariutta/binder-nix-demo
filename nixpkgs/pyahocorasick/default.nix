@@ -15,10 +15,11 @@ buildPythonPackage rec {
     sha256 = "0plm9x2gziayjsl7flsgn1z8qx88c9vqm4fs1wq7dv7fr188liik";
   };
 
-  #checkInputs = [ pytestCheckHook ];
+  doCheck = true;
+  checkInputs = [ pytestCheckHook ];
 
-  #pytestFlagsArray = [ "unittests.py" ];
-  #pythonImportsCheck = [ "ahocorasick" ];
+  pytestFlagsArray = [ "unittests.py" ];
+  pythonImportsCheck = [ "ahocorasick" ];
 
   meta = with lib; {
     description = "Python module implementing Aho-Corasick algorithm";

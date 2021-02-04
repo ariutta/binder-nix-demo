@@ -11,9 +11,10 @@ buildPythonPackage rec {
     sha256 = "cdb61c1ed4d23a1ec297e3c9a483dba2de171164b98afc3ed43862a91605f2fc";
   };
 
-  doCheck = false;
+  doCheck = true;
   buildInputs = [ ];
   propagatedBuildInputs = [ ];
+
   meta = {
     homepage = "https://github.com/orsinium/homoglyphs";
     license = "GNU Lesser General Public License v3.0";

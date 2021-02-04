@@ -1,8 +1,4 @@
-{ stdenv, python3 }:
-
-let
-  inherit (python3.pkgs) buildPythonPackage fetchPypi;
-in
+{ lib, buildPythonPackage, fetchPypi, packaging }:
 
 buildPythonPackage rec {
   pname = "jupyter-packaging";
@@ -14,11 +10,12 @@ buildPythonPackage rec {
     sha256 = "0ma4dsi2rjha1d592wkranbz4ppzwpvakgmybxzx3bqgdpi6w9gh";
   };
 
-  buildInputs = with python3.pkgs; [
+  doCheck = true;
+  buildInputs = [
     packaging
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Tools to help build and install Jupyter Python packages.";
     homepage = "https://github.com/jupyter/jupyter-packaging";
     license = licenses.bsd3;

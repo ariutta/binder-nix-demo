@@ -13,8 +13,8 @@ buildPythonPackage rec {
   };
 
   doCheck = true;
-  buildInputs = [ ];
-  propagatedBuildInputs = [ click ];
+  buildInputs = [ click ];
+  propagatedBuildInputs = [ ];
 
   meta = {
     homepage = "https://github.com/vhf/confusable_homoglyphs";

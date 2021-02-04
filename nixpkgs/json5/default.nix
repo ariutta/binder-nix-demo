@@ -1,8 +1,4 @@
-{ stdenv, python3 }:
-
-let
-  inherit (python3.pkgs) buildPythonPackage fetchPypi;
-in
+{ lib, buildPythonPackage, fetchPypi, hypothesis }:
 
 buildPythonPackage rec {
   pname = "json5";
@@ -14,18 +10,24 @@ buildPythonPackage rec {
     sha256 = "15nvdg8a8al1hfnqwdfwf64xkc64lsmcdqcjdaspc1br83jzwg3h";
   };
 
-  propagatedBuildInputs = with python3.pkgs; [];
+  propagatedBuildInputs = [ hypothesis ];
 
+  # there's a problem with finding the file sample.json5
   doCheck = false;
 
-  meta = with stdenv.lib; {
-    description = "Format Python in Jupyter with Black.";
+  meta = {
+    description = "A Python implementation of the JSON5 data format.";
     longDescription = ''
-      A simple extension for Jupyter Notebook and Jupyter Lab to beautify Python
-      code automatically using black.
+      A Python implementation of the JSON5 data format.
+
+      JSON5 extends the JSON data interchange format to make it slightly more usable as a configuration language:
+          * JavaScript-style comments (both single and multi-line) are legal.
+          * Object keys may be unquoted if they are legal ECMAScript identifiers
+          * Objects and arrays may end with trailing commas.
+          * Strings can be single-quoted, and multi-line string literals are allowed.
       '';
-    homepage = "https://pypi.org/project/nb_black/";
-    license = licenses.mit;
-    maintainers = with maintainers; [ ];
+    homepage = "https://pypi.org/project/json5/";
+    license = lib.licenses.asl20;
+    maintainers = with lib.maintainers; [ ];
   };
 }

@@ -1,8 +1,10 @@
-{ stdenv, python3 }:
-
-let
-  inherit (python3.pkgs) buildPythonPackage fetchPypi;
-in
+{ lib
+, buildPythonPackage
+, fetchPypi
+, yapf
+, black
+, ipython
+}:
 
 buildPythonPackage rec {
   pname = "nb_black";
@@ -14,14 +16,16 @@ buildPythonPackage rec {
     sha256 = "0aynnsqnmrvkc7awx7li1zvbwlgrz2hp7b3rdl56lpv78qx2x98w";
   };
 
-  propagatedBuildInputs = with python3.pkgs; [
+  doCheck = true;
+
+  propagatedBuildInputs = [
     yapf
     black
     ipython
     #ipython_genutils
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Format Python in Jupyter with Black.";
     longDescription = ''
       A simple extension for Jupyter Notebook and Jupyter Lab to beautify Python

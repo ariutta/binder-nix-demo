@@ -1,5 +1,4 @@
-{
-stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
 , pythonOlder
@@ -52,9 +51,9 @@ buildPythonPackage rec {
     anyio
   ];
 
-  doCheck = false;
+  doCheck = true;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "The backend—i.e. core services, APIs, and REST endpoints—to Jupyter web applications.";
     longDescription = "The Jupyter Server provides the backend (i.e. the core services, APIs, and REST endpoints) for Jupyter web applications like Jupyter notebook, JupyterLab, and Voila.";
     homepage = "https://github.com/jupyter/jupyter-server";
