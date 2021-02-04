@@ -1,6 +1,7 @@
 { lib
 , buildPythonPackage
 , fetchurl
+, click
 }:
 
 buildPythonPackage rec {
@@ -11,9 +12,10 @@ buildPythonPackage rec {
     sha256 = "3b4a0d9fa510669498820c91a0bfc0c327568cecec90648cf3819d4a6fc6a751";
   };
 
-  doCheck = false;
+  doCheck = true;
   buildInputs = [ ];
-  propagatedBuildInputs = [ ];
+  propagatedBuildInputs = [ click ];
+
   meta = {
     homepage = "https://github.com/vhf/confusable_homoglyphs";
     license = lib.licenses.mit;
