@@ -1,4 +1,12 @@
-{ lib, buildPythonPackage, fetchPypi, pytestrunner, pandas, requests }:
+{ lib
+, buildPythonPackage
+, fetchPypi
+, pytest
+, pytestCheckHook
+, pytestrunner
+, pandas
+, requests
+}:
 
 buildPythonPackage rec {
   pname = "wikidata2df";
@@ -59,7 +67,7 @@ buildPythonPackage rec {
   # The following almost 'works' (by disabling all tests), but it gives an error
   # of some sort.
   # Maybe it's expecting something returns an exit code of 0?
-#  checkInputs = with python3.pkgs; [pytest];
+#  checkInputs = [ pytest ];
 #  checkPhase = ''
 #    pytest tests/ -k 'not test_wikidata2df_horse and not test_wikidata2df_cat and not test_wdt2csv and not test_fake_query'
 #  '';
@@ -69,7 +77,7 @@ buildPythonPackage rec {
 #  #
 #  # 15.19.1.2.5. Using pytestCheckHook
 #  # https://nixos.org/manual/nixpkgs/stable/#faq
-#  checkInputs = with python3.pkgs; [ pytestCheckHook ];
+#  checkInputs = [ pytestCheckHook ];
 #  pytestFlagsArray = [ "tests/" ];
 #  disabledTests = [
 #    # touches network

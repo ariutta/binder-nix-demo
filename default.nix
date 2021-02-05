@@ -1,6 +1,11 @@
 let
-  rootDirectoryImpure = ".";
+  # terminal setting to make the Powerline prompt look OK:
+  # {"fontFamily": "Meslo LG S DZ for Powerline,monospace"}
+
+  # this corresponds to notebook_dir (impure)
+  rootDirectoryImpure = toString ./.;
   shareDirectoryImpure = "${rootDirectoryImpure}/share-jupyter";
+  jupyterlabDirectoryImpure = "${rootDirectoryImpure}/share-jupyter/lab";
   # Path to the JupyterWith folder.
   jupyterWithPath = builtins.fetchGit {
     url = https://github.com/tweag/jupyterWith;
@@ -35,6 +40,7 @@ let
   #########################
 
   myRPackages = p: with p; [
+    formatR
     pacman
     dplyr
     ggplot2
@@ -49,7 +55,7 @@ let
 
   irkernel = jupyter.kernels.iRWith {
     # Identifier that will appear on the Jupyter interface.
-    name = "irkernel";
+    name = "R_with_packages";
     # Libraries to be available to the kernel.
     packages = myRPackages;
     # Optional definition of `rPackages` to be used.
@@ -74,21 +80,26 @@ let
   #########################
 
   iPython = jupyter.kernels.iPythonWith {
-    name = "iPython";
+    name = "Python_with_packages";
     packages = p: with p; [
+      # TODO: nb_black is a 'python magic', not a serverextension. Since it is
+      # intended for only for augmenting jupyter, where should I specify it?
+      nb_black
+      # TODO: compare nb_black with https://github.com/ryantam626/jupyterlab_code_formatter
+      # One difference: this uses python magics (%), whereas jupyterlab_code_formatter
+      # is an extension.
+
+      # similar question for nbconvert
+      nbconvert
+
+      # non-Jupyter-specific packages
+
       numpy
       pandas
-
-      # TODO: the following are not serverextensions, but they ARE specifically
-      # intended for augmenting jupyter. Where should we specify them?
-
-      # TODO: compare nb_black with https://github.com/ryantam626/jupyterlab_code_formatter
-      nb_black
 
       beautifulsoup4
       soupsieve
 
-      nbconvert
       seaborn
 
       requests
@@ -132,20 +143,16 @@ let
 
   jupyterEnvironment =
     jupyter.jupyterlabWith {
-      directory = shareDirectoryImpure;
+      directory = jupyterlabDirectoryImpure;
       kernels = [ iPython irkernel ];
       extraPackages = p: [
-        # needed by jupyterlab-launch
+        # needed by jupyterlab-connect
         p.ps
         p.lsof
+        p.which
 
-        # optionals below
 
-        p.imagemagick
-
-        # TODO: do we still need these for lab extensions?
-        p.nodejs
-        p.yarn
+        mynixpkgs.jupyterlab-connect
 
         # for nbconvert
         p.pandoc
@@ -153,7 +160,62 @@ let
         #tectonic
         # more info: https://nixos.wiki/wiki/TexLive
         p.texlive.combined.scheme-full
-        mynixpkgs.jupyterlab-connect
+
+        #p.python3Packages.jupytext
+
+        # Jupyter may need this a dependency somehow for building?
+        #p.python3Packages.jupyter_packaging
+
+        # TODO: jupyterlab_code_formatter isn't working correctly.
+        # It claims black and autopep8 aren't installed, even though they are.
+        # And when I try isort as formatter, it does nothing.
+        #
+        # I have to put these here so that jupyter can load them
+        # as server extensions.
+#        p.python3Packages.black
+#        p.python3Packages.isort
+#        p.python3Packages.autopep8
+#        p.python3Packages.jupyterlab_code_formatter
+
+#        p.python3.withPackages(ps: [
+#          ps.black
+#          ps.isort
+#          ps.autopep8
+#          ps.jupyterlab_code_formatter
+#        ])
+
+        (p.python3.withPackages (ps: with ps; [
+          # jupyter server extensions
+
+          # TODO: jupyterlab_code_formatter isn't working correctly.
+          # It claims black and autopep8 aren't installed, even though they are.
+          # And when I try isort as formatter, it does nothing.
+          #
+          black
+          isort
+          autopep8
+          jupyterlab_code_formatter
+
+          jupytext
+
+          # other
+
+          jupyter_packaging
+        ]))
+
+        p.black
+
+        # TODO: these dependencies are only required when it's necessary to
+        # build a lab extension for from source.
+        # Does jupyterWith allow me to specify them as buildInputs?
+        p.nodejs
+        p.yarn
+
+        #################################
+        # non-Jupyter-specific packages
+        #################################
+
+        p.imagemagick
 
         # to run AutoML Vision
         p.google-cloud-sdk
@@ -165,13 +227,16 @@ let
         p.blockhash
       ];
 
+      # TODO: how do we know it's python3.8 instead of another version like python3.9?
       extraJupyterPath = pkgs:
-        "${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages";
+        "${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages:${pkgs.black}/lib/python3.8/site-packages:${pkgs.python3Packages.black}/lib/python3.8/site-packages:${pkgs.python3Packages.isort}/lib/python3.8/site-packages:${pkgs.python3Packages.autopep8}/lib/python3.8/site-packages:${pkgs.python3Packages.jupyterlab_code_formatter}/lib/python3.8/site-packages";
+        #"${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages";
     };
 in
   jupyterEnvironment.env.overrideAttrs (oldAttrs: {
     shellHook = oldAttrs.shellHook + ''
     . "${mynixpkgs.jupyterlab-connect}"/share/bash-completion/completions/jupyterlab-connect.bash
+
     # this is needed in order that tools like curl and git can work with SSL
     if [ ! -f "$SSL_CERT_FILE" ] || [ ! -f "$NIX_SSL_CERT_FILE" ]; then
       candidate_ssl_cert_file=""
@@ -194,30 +259,137 @@ in
     # set SOURCE_DATE_EPOCH so that we can use python wheels
     SOURCE_DATE_EPOCH=$(date +%s)
 
+    export JUPYTERLAB_DIR="${jupyterlabDirectoryImpure}"
     export JUPYTER_CONFIG_DIR="${shareDirectoryImpure}/config"
-    export JUPYTER_DATA_DIR="${shareDirectoryImpure}/data"
+    export JUPYTER_DATA_DIR="${shareDirectoryImpure}"
     export JUPYTER_RUNTIME_DIR="${shareDirectoryImpure}/runtime"
-    export JUPYTERLAB_DIR="${shareDirectoryImpure}/lab"
 
     if [ ! -d "${shareDirectoryImpure}" ]; then
       mkdir -p "$JUPYTER_CONFIG_DIR"
       mkdir -p "$JUPYTER_DATA_DIR"
       mkdir -p "$JUPYTER_RUNTIME_DIR"
-      mkdir -p "$JUPYTERLAB_DIR"/extensions
+
+      mkdir -p "$JUPYTERLAB_DIR"
+
+      mkdir -p "$JUPYTER_DATA_DIR/labextensions"
+
+      # Build just the core Jupyter code. We won't build again unless we need
+      # to install an extension that is not available as prebuilt.
+      # Piping stdout to stderr because otherwise something gets
+      # inappropriately evaluated in ./.envrc: eval $(cat "$\{dump\}")
+      jupyter lab build 1>&2
+
+      #############
+      # add configs
+      #############
+
+      # TODO: which of way of specifying server configs is better?
+      # 1. jupyter_server_config.json (single file w/ all jpserver_extensions.)
+      # 2. jupyter_server_config.d/ (directory holding multiple config files)
+      #                            jupyterlab.json
+      #                            jupyterlab_code_formatter.json
+      #                            ... 
+
+      #----------------------
+      # jupyter_server_config
+      #----------------------
       # We need to set root_dir in config so that this command:
       #   direnv exec ~/Documents/myenv jupyter lab start
       # always results in root_dir being ~/Documents/myenv.
-      # If we don't, then running that command from $HOME makes root_dir be $HOME.
-      # TODO: what is the filename supposed to be?
-      #   jupyter_server_config.json
-      #   jupyter_notebook_config.json
-      #   jupyter_config.json
-      #   jupyter_notebook_config.py
-      if [ -f "$JUPYTER_CONFIG_DIR/jupyter_notebook_config.json" ]; then
-        echo "File already exists: $JUPYTER_CONFIG_DIR/jupyter_notebook_config.json" >/dev/stderr
+      # Otherwise, running that command from $HOME makes root_dir be $HOME.
+      #
+      # TODO: what is the difference between these two:
+      # - ServerApp.jpserver_extensions
+      # - NotebookApp.nbserver_extensions
+      #
+      # TODO: what's the point of the following check?
+      if [ -f "$JUPYTER_CONFIG_DIR/jupyter_server_config.json" ]; then
+        echo "File already exists: $JUPYTER_CONFIG_DIR/jupyter_server_config.json" >/dev/stderr
         exit 1
       fi
-      echo '{"NotebookApp": {"root_dir": "${rootDirectoryImpure}"}}' >"$JUPYTER_CONFIG_DIR/jupyter_notebook_config.json"
+      #
+      # If I don't include jupyterlab_code_formatter in
+      # ServerApp.jpserver_extensions, I get the following error
+      #   Jupyterlab Code Formatter Error
+      #   Unable to find server plugin version, this should be impossible,open a GitHub issue if you cannot figure this issue out yourself.
+      #
+      echo '{"ServerApp": {"root_dir": "${rootDirectoryImpure}", "jpserver_extensions":{"nbclassic":true,"jupyterlab":true,"jupyterlab_code_formatter":true}}}' >"$JUPYTER_CONFIG_DIR/jupyter_server_config.json"
+
+      #------------------------
+      # jupyter_notebook_config
+      #------------------------
+      # The packages listed by 'jupyter-serverextension list' come from
+      # what is specified in ./config/jupyter_notebook_config.json.
+      # Yes, it does appear that 'server extensions' are indeed specified in
+      # jupyter_notebook_config, not jupyter_server_config. That's confusing.
+      #
+      echo '{ "NotebookApp": { "nbserver_extensions": { "jupyterlab": true, "jupytext": true, "jupyterlab_code_formatter": true }}}' >"$JUPYTER_CONFIG_DIR/jupyter_notebook_config.json"
+
+      #-------------------
+      # widgetsnbextension
+      #-------------------
+      # Not completely sure why this is needed, but without it, things didn't work.
+      mkdir -p "$JUPYTER_CONFIG_DIR/nbconfig/notebook.d"
+      echo '{"load_extensions":{"jupyter-js-widgets/extension":true}}' >"$JUPYTER_CONFIG_DIR/nbconfig/notebook.d/widgetsnbextension.json"
+
+      ################################
+      # install prebuilt labextensions
+      ################################
+
+      # Note these are distributed via PyPI as "python" packages.
+
+      # jupyterlab_hide_code
+      #
+      # The labextension code appears to be duplicated in the built python pkg.
+      # The following two dirs are identical, except share has install.json.
+      #
+      # * lib/python3.8/site-packages/jupyterlab_hide_code/labextension
+      # * share/jupyter/labextensions/jupyterlab-hide-code
+      #
+      # When the symlink target is 'jupyterlab-hide-code' (dash case), the lab extension
+      # works, regardless of whether the source is lib/...:
+      #ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/lib/python3.8/site-packages/jupyterlab_hide_code/labextension" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-hide-code"
+      # or share/...:
+      ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/share/jupyter/labextensions/jupyterlab-hide-code" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-hide-code"
+      #
+      # But when the symlink target is 'jupyterlab_hide_code' (snake_case), the
+      # lab extension doesn't work. This is true regardless of whether the
+      # source is lib/...:
+      #ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/share/jupyter/labextensions/jupyterlab-hide-code" "$JUPYTER_DATA_DIR/labextensions/jupyterlab_hide_code"
+      # or share/...:
+      #ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/share/jupyter/labextensions/jupyterlab-hide-code" "$JUPYTER_DATA_DIR/labextensions/jupyterlab_hide_code"
+      #
+      # When using target share/..., the command 'jupyter-labextension list'
+      # adds some extra info to the end:
+      #   jupyterlab-hide-code v3.0.1 enabled OK (python, jupyterlab_hide_code)
+      # This is what we get when using target lib/...:
+      #   jupyterlab-hide-code v3.0.1 enabled OK
+      # This difference could be due to the install.json being in share/...
+
+      # @axlair/jupyterlab_vim
+      mkdir -p "$JUPYTER_DATA_DIR/labextensions/@axlair"
+      ln -s "${pkgs.python3Packages.jupyterlab_vim}/lib/python3.8/site-packages/jupyterlab_vim/labextension" "$JUPYTER_DATA_DIR/labextensions/@axlair/jupyterlab_vim"
+
+      # @ryantam626/jupyterlab_code_formatter
+      mkdir -p "$JUPYTER_DATA_DIR/labextensions/@ryantam626"
+      # this doesn't work:
+      ln -s "${pkgs.python3Packages.jupyterlab_code_formatter}/share/jupyter/labextensions/@ryantam626/jupyterlab_code_formatter" "$JUPYTER_DATA_DIR/labextensions/@ryantam626/jupyterlab-code-formatter"
+      # these two sort of work, except they both 404 when trying to actually format some code
+      #ln -s "${pkgs.python3Packages.jupyterlab_code_formatter}/lib/python3.8/site-packages/jupyterlab_code_formatter/labextension" "$JUPYTER_DATA_DIR/labextensions/@ryantam626/jupyterlab_code_formatter";
+      ln -s "${pkgs.python3Packages.jupyterlab_code_formatter}/share/jupyter/labextensions/@ryantam626/jupyterlab_code_formatter" "$JUPYTER_DATA_DIR/labextensions/@ryantam626/jupyterlab_code_formatter"
+
+      ##############################
+      # install source labextensions
+      ##############################
+
+      # An example of how we could install jupyterlab_hide_code as a source
+      # extension (basically an un-built NPM package that must be compiled):
+      #ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/share/jupyter/labextensions/jupyterlab-hide-code" "$JUPYTER_DATA_DIR/labextensions/jupyterlab_hide_code"
+
+      # only needed if we're using any source labextensions.
+      #chmod -R +w "${jupyterlabDirectoryImpure}/staging/"
+      #jupyter lab build 2>&1
+      #chmod -R -w "${jupyterlabDirectoryImpure}/staging/"
     fi
     '';
   })

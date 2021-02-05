@@ -1,10 +1,13 @@
-{ lib, stdenv
-, python3
+{ lib
 , buildPythonPackage
 , fetchPypi
 , pythonOlder
+, Babel
+, jinja2
 , json5
+, jsonschema
 , jupyter_server
+, packaging
 , requests
 , pytest
 }:
@@ -20,15 +23,14 @@ buildPythonPackage rec {
   };
 
   checkInputs = [ requests pytest ];
-  propagatedBuildInputs = with python3.pkgs; [
+  propagatedBuildInputs = [
     Babel
     jinja2
     json5
     jsonschema
+    jupyter_server
     packaging
     requests
-    jupyter_server
-    #notebook jsonschema pyjson5
   ];
 
   # test_listing test fails
@@ -41,6 +43,8 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "JupyterLab Server";
+    # TODO: which homepage is more appropriate?
+    # homepage = "https://github.com/jupyterlab/jupyterlab_server";
     homepage = "https://jupyter.org";
     license = licenses.bsdOriginal;
     maintainers = [ maintainers.costrouc ];

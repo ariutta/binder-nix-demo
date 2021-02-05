@@ -1,7 +1,8 @@
 { lib
 , buildPythonPackage
 , fetchPypi
-, python3
+, rdflib
+, requests
 }:
 
 buildPythonPackage rec {
@@ -12,16 +13,17 @@ buildPythonPackage rec {
     sha256 = "121drkk5mjsaxcdja43bacr57zzmm99s54ylyjw4iv46sxyj925y";
   };
 
-  propagatedBuildInputs = with python3.pkgs;[
-    requests rdflib
+  propagatedBuildInputs = [
+    rdflib
+    requests
   ];
 
-  # doCheck = false;
+  doCheck = true;
 
-  meta = {
+  meta = with lib; {
     description = "Client library for accessing Skosmos REST API endpoints";
     homepage = "https://github.com/NatLibFi/Skosmos-client";
-    license = with lib.licenses; [ asl20 ];
-    maintainers = with lib.maintainers; [ ariutta ];
+    license = with licenses; [ asl20 ];
+    maintainers = with maintainers; [ ariutta ];
   };
 }
