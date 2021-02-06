@@ -12,8 +12,14 @@ let
   jupyterlab = pkgs.python3Packages.callPackage ./nixpkgs/jupyterlab/default.nix {
     inherit nbclassic jupyter_packaging jupyter_server jupyterlab_server;
   };
+  jupyter_lsp = pkgs.python3Packages.callPackage ./nixpkgs/jupyter_lsp/default.nix {
+    inherit nbclassic jupyter_packaging jupyter_server jupyterlab_server;
+  };
   packageOverrides = selfPythonPackages: pythonPackages: {
-    inherit json5 nbclassic jupyter_packaging jupyter_server jupyterlab_server jupyterlab;
+    inherit json5 nbclassic jupyter_packaging jupyter_server jupyterlab_server jupyterlab jupyter_lsp;
+    jupyterlab-lsp = selfPythonPackages.callPackage ./nixpkgs/jupyterlab_lsp/default.nix {
+      inherit jupyterlab jupyter_lsp;
+    };
     jupyterlab_code_formatter = selfPythonPackages.callPackage ./nixpkgs/jupyterlab_code_formatter/default.nix {
       inherit jupyterlab;
     };
