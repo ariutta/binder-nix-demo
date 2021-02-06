@@ -2,10 +2,8 @@
 , buildPythonPackage
 , fetchPypi
 , setuptools
-, jupyterlab
 , jupyter_lsp
-, python3Packages
-, python3
+, jupyterlab
 , R
 , rPackages
 }:
@@ -22,7 +20,16 @@ buildPythonPackage rec {
 
   doCheck = true;
   buildInputs = [ setuptools ];
-  propagatedBuildInputs = [ jupyterlab jupyter_lsp python3 R python3Packages.python-language-server python3Packages.rope rPackages.languageserver ];
+  propagatedBuildInputs = [
+    jupyter_lsp
+    jupyterlab
+
+    # These two are required for rPackages.languageserver to be able load.
+    R
+    rPackages.languageserver
+
+    # TODO: must we specify in this file every language server we want?
+  ];
 
   meta = with lib; {
     description = "Language Server Protocol integration for JupyterLab.";

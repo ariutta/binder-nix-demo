@@ -13,7 +13,8 @@ let
     inherit nbclassic jupyter_packaging jupyter_server jupyterlab_server;
   };
   jupyter_lsp = pkgs.python3Packages.callPackage ./nixpkgs/jupyter_lsp/default.nix {
-    inherit nbclassic jupyter_packaging jupyter_server jupyterlab_server;
+    #inherit nbclassic jupyter_packaging jupyter_server jupyterlab_server;
+    inherit jupyter_server;
   };
   packageOverrides = selfPythonPackages: pythonPackages: {
     inherit json5 nbclassic jupyter_packaging jupyter_server jupyterlab_server jupyterlab jupyter_lsp;

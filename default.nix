@@ -1,5 +1,6 @@
+with builtins;
 let
-  # 6
+  # 19
   # terminal setting to make the Powerline prompt look OK:
   # {"fontFamily": "Meslo LG S DZ for Powerline,monospace"}
 
@@ -102,11 +103,6 @@ let
       # similar question for nbconvert
       nbconvert
 
-      jupyter_lsp
-      jupyterlab-lsp
-      python-language-server
-      rope 
-
       # non-Jupyter-specific packages
 
       numpy
@@ -164,10 +160,6 @@ let
         # needed by jupyterlab-connect
         p.ps
         p.lsof
-        p.which
-
-        #p.python3Packages.python-language-server
-        p.python-language-server
 
         mynixpkgs.jupyterlab-connect
 
@@ -178,58 +170,23 @@ let
         # more info: https://nixos.wiki/wiki/TexLive
         p.texlive.combined.scheme-full
 
-        #p.python3Packages.jupytext
-
-        # Jupyter may need this a dependency somehow for building?
-        #p.python3Packages.jupyter_packaging
+        # I have to put these here so that jupyter can load them
+        # as server extensions.
+        p.python3Packages.jupyter_lsp
+        # jupyterlab-lsp must be specified here in order for the LSP for R to work.
+        p.python3Packages.jupyterlab-lsp
+        #p.rPackages.languageserver
 
         # TODO: jupyterlab_code_formatter isn't working correctly.
         # It claims black and autopep8 aren't installed, even though they are.
         # And when I try isort as formatter, it does nothing.
-        #
-        # I have to put these here so that jupyter can load them
-        # as server extensions.
-#        p.python3Packages.black
-#        p.python3Packages.isort
-#        p.python3Packages.autopep8
-#        p.python3Packages.jupyterlab_code_formatter
+        p.python3Packages.jupyterlab_code_formatter
+        p.python3Packages.black
+        p.python3Packages.isort
+        p.python3Packages.autopep8
 
-#        p.python3.withPackages(ps: [
-#          ps.black
-#          ps.isort
-#          ps.autopep8
-#          ps.jupyterlab_code_formatter
-#        ])
-
-        p.python3Packages.jupyter_lsp
-        p.python3Packages.jupyterlab-lsp
-
-        (p.python3.withPackages (ps: with ps; [
-          ###########################
-          # jupyter server extensions
-          ###########################
-
-          jupyter_lsp
-          jupyterlab-lsp
-          python-language-server
-
-          # TODO: jupyterlab_code_formatter isn't working correctly.
-          # It claims black and autopep8 aren't installed, even though they are.
-          # And when I try isort as formatter, it does nothing.
-          #
-          black
-          isort
-          autopep8
-          jupyterlab_code_formatter
-
-          jupytext
-
-          ########
-          # other
-          ########
-
-          jupyter_packaging
-        ]))
+        p.python3Packages.jupytext
+        p.python3Packages.jupyter_packaging
 
         # TODO: these dependencies are only required when it's necessary to
         # build a lab extension for from source.
@@ -255,8 +212,18 @@ let
 
       # TODO: how do we know it's python3.8 instead of another version like python3.9?
       extraJupyterPath = pkgs:
-        "${pkgs.python3Packages.python-language-server}/lib/python3.8/site-packages:${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages:${pkgs.python3Packages.jupyter_lsp}/lib/python3.8/site-packages:${pkgs.python3Packages.jupyterlab-lsp}/lib/python3.8/site-packages:${pkgs.black}/lib/python3.8/site-packages:${pkgs.python3Packages.black}/lib/python3.8/site-packages:${pkgs.python3Packages.isort}/lib/python3.8/site-packages:${pkgs.python3Packages.autopep8}/lib/python3.8/site-packages:${pkgs.python3Packages.jupyterlab_code_formatter}/lib/python3.8/site-packages";
-        #"${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages";
+        concatStringsSep ":" [
+          #"${pkgs.rPackages.languageserver}/library/languageserver/R/languageserver"
+          #"${pkgs.python-language-server}/bin"
+          "${pkgs.python3Packages.python-language-server}/lib/python3.8/site-packages"
+          "${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages"
+          "${pkgs.python3Packages.jupyter_lsp}/lib/python3.8/site-packages"
+          "${pkgs.python3Packages.jupyterlab_code_formatter}/lib/python3.8/site-packages"
+          "${pkgs.black}/lib/python3.8/site-packages"
+          "${pkgs.python3Packages.black}/lib/python3.8/site-packages"
+          "${pkgs.python3Packages.isort}/lib/python3.8/site-packages"
+          "${pkgs.python3Packages.autopep8}/lib/python3.8/site-packages"
+        ];
     };
 in
   jupyterEnvironment.env.overrideAttrs (oldAttrs: {

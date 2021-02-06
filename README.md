@@ -75,7 +75,7 @@ ln -s /nix/store/8wbri9v2n9sx5dckbb5vybn35gb2v79q-python3.8-jupyterlab_hide_code
 mkdir @ryantam626/ && ln -s /nix/store/pbxbzkm03nmy2h84r1xbc8lbi3nyhcvp-python3.8-jupyterlab_code_formatter-1.4.3/lib/python3.8/site-packages/jupyterlab_code_formatter/labextension @ryantam626/jupyterlab_code_formatter
 ```
 
-Rebuild and check extensions:
+Full rebuild and check extensions:
 
 ```
 mkdir -p share-jupyter/lab/staging/ && chmod -R +w share-jupyter/lab/staging/ && rm -rf share-jupyter .direnv/ && direnv allow
@@ -83,4 +83,10 @@ mkdir -p share-jupyter/lab/staging/ && chmod -R +w share-jupyter/lab/staging/ &&
 
 ```
 jupyter-serverextension list && jupyter-labextension list
+```
+
+Full rebuild and open notebook:
+
+```
+ssh nixos 'mkdir -p Documents/binder-nix-demo/share-jupyter/lab/staging && chmod -R +w Documents/binder-nix-demo/share-jupyter/lab/staging && rm -rf Documents/binder-nix-demo/.direnv Documents/binder-nix-demo/share-jupyter' && jupyterlab-connect nixos:Documents/binder-nix-demo
 ```

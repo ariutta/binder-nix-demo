@@ -2,10 +2,10 @@
 , buildPythonPackage
 , fetchPypi
 , setuptools
-, nbclassic
-, jupyter_packaging
 , jupyter_server
-, jupyterlab_server
+#, nbclassic
+#, jupyter_packaging
+#, jupyterlab_server
 , pytest
 , pytestrunner
 }:
@@ -21,7 +21,8 @@ buildPythonPackage rec {
   };
 
   buildInputs = [ setuptools ];
-  propagatedBuildInputs = [ nbclassic jupyter_packaging jupyter_server jupyterlab_server ];
+  #propagatedBuildInputs = [ nbclassic jupyter_packaging jupyter_server jupyterlab_server ];
+  propagatedBuildInputs = [ jupyter_server ];
   doCheck = true;
   checkInputs = [ pytest pytestrunner ];
 
