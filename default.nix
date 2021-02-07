@@ -1,6 +1,6 @@
 with builtins;
 let
-  # 19
+  # 20
   # terminal setting to make the Powerline prompt look OK:
   # {"fontFamily": "Meslo LG S DZ for Powerline,monospace"}
 
@@ -33,6 +33,26 @@ let
 
   # Your Nixpkgs snapshot, with JupyterWith packages.
   pkgs = import <nixpkgs> { inherit overlays; };
+
+  myExternalPython = (pkgs.python3.withPackages (ps: with ps; [ 
+    # I have to put these here so that jupyter can load them
+    # as server extensions.
+    jupyter_lsp
+    # jupyterlab-lsp must be specified here in order for the LSP for R to work.
+    jupyterlab-lsp
+    python-language-server
+
+    # TODO: jupyterlab_code_formatter isn't working correctly.
+    # It claims black and autopep8 aren't installed, even though they are.
+    # And when I try isort as formatter, it does nothing.
+    jupyterlab_code_formatter
+    black
+    isort
+    autopep8
+
+    jupytext
+    jupyter_packaging
+  ]));
 
   # From here, everything happens as in other examples.
   jupyter = pkgs.jupyterWith;
@@ -96,9 +116,9 @@ let
       # One difference: this uses python magics (%), whereas jupyterlab_code_formatter
       # is an extension.
 
-      black
-      isort
-      autopep8
+      #black
+      #isort
+      #autopep8
 
       # similar question for nbconvert
       nbconvert
@@ -170,23 +190,25 @@ let
         # more info: https://nixos.wiki/wiki/TexLive
         p.texlive.combined.scheme-full
 
-        # I have to put these here so that jupyter can load them
-        # as server extensions.
-        p.python3Packages.jupyter_lsp
+        myExternalPython
+
+#        # I have to put these here so that jupyter can load them
+#        # as server extensions.
+        #p.python3Packages.jupyter_lsp
         # jupyterlab-lsp must be specified here in order for the LSP for R to work.
-        p.python3Packages.jupyterlab-lsp
-        #p.rPackages.languageserver
-
-        # TODO: jupyterlab_code_formatter isn't working correctly.
-        # It claims black and autopep8 aren't installed, even though they are.
-        # And when I try isort as formatter, it does nothing.
-        p.python3Packages.jupyterlab_code_formatter
-        p.python3Packages.black
-        p.python3Packages.isort
-        p.python3Packages.autopep8
-
-        p.python3Packages.jupytext
-        p.python3Packages.jupyter_packaging
+        #p.python3Packages.jupyterlab-lsp
+        #p.python3Packages.python-language-server
+#
+#        # TODO: jupyterlab_code_formatter isn't working correctly.
+#        # It claims black and autopep8 aren't installed, even though they are.
+#        # And when I try isort as formatter, it does nothing.
+#        p.python3Packages.jupyterlab_code_formatter
+#        p.python3Packages.black
+#        p.python3Packages.isort
+#        p.python3Packages.autopep8
+#
+#        p.python3Packages.jupytext
+#        p.python3Packages.jupyter_packaging
 
         # TODO: these dependencies are only required when it's necessary to
         # build a lab extension for from source.
@@ -213,16 +235,17 @@ let
       # TODO: how do we know it's python3.8 instead of another version like python3.9?
       extraJupyterPath = pkgs:
         concatStringsSep ":" [
+          "${myExternalPython}/lib/python3.8/site-packages"
+          #"${pkgs.python3Packages.python-language-server}/lib/python3.8/site-packages"
+          #"${pkgs.python3Packages.jupyter_lsp}/lib/python3.8/site-packages"
+          #"${pkgs.python3Packages.jupyterlab_code_formatter}/lib/python3.8/site-packages"
+
+          #"${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages"
+          #"${pkgs.black}/lib/python3.8/site-packages"
+          #"${pkgs.python3Packages.black}/lib/python3.8/site-packages"
+          #"${pkgs.python3Packages.isort}/lib/python3.8/site-packages"
+          #"${pkgs.python3Packages.autopep8}/lib/python3.8/site-packages"
           #"${pkgs.rPackages.languageserver}/library/languageserver/R/languageserver"
-          #"${pkgs.python-language-server}/bin"
-          "${pkgs.python3Packages.python-language-server}/lib/python3.8/site-packages"
-          "${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages"
-          "${pkgs.python3Packages.jupyter_lsp}/lib/python3.8/site-packages"
-          "${pkgs.python3Packages.jupyterlab_code_formatter}/lib/python3.8/site-packages"
-          "${pkgs.black}/lib/python3.8/site-packages"
-          "${pkgs.python3Packages.black}/lib/python3.8/site-packages"
-          "${pkgs.python3Packages.isort}/lib/python3.8/site-packages"
-          "${pkgs.python3Packages.autopep8}/lib/python3.8/site-packages"
         ];
     };
 in
@@ -315,6 +338,8 @@ in
     # Not completely sure why this is needed, but without it, things didn't work.
     mkdir -p "$JUPYTER_CONFIG_DIR/nbconfig/notebook.d"
     echo '{"load_extensions":{"jupyter-js-widgets/extension":true}}' >"$JUPYTER_CONFIG_DIR/nbconfig/notebook.d/widgetsnbextension.json"
+
+    ln -s "${myExternalPython}" "./myExternalPythonhey"
 
     #################
     # lab extensions

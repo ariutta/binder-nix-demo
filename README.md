@@ -88,5 +88,5 @@ jupyter-serverextension list && jupyter-labextension list
 Full rebuild and open notebook:
 
 ```
-ssh nixos 'mkdir -p Documents/binder-nix-demo/share-jupyter/lab/staging && chmod -R +w Documents/binder-nix-demo/share-jupyter/lab/staging && rm -rf Documents/binder-nix-demo/.direnv Documents/binder-nix-demo/share-jupyter' && jupyterlab-connect nixos:Documents/binder-nix-demo
+ssh nixos 'mkdir -p Documents/binder-nix-demo/share-jupyter/lab/staging && chmod -R +w Documents/binder-nix-demo/share-jupyter/lab/staging && rm -rf Documents/binder-nix-demo/.direnv Documents/binder-nix-demo/.virtual_documents Documents/binder-nix-demo/share-jupyter' && jupyterlab-connect nixos:Documents/binder-nix-demo
 ```
