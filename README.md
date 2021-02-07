@@ -30,14 +30,14 @@ pkgs = import <nixpkgs> { inherit overlays; }
 TODO:
 
 - Get my jupyterlab extensions (JS) working. Related: [what jupyterWith says](https://github.com/tweag/jupyterWith#using-jupyterlab-extensions) about how they do this and [why](https://github.com/tweag/jupyterWith#about-extensions).
-  -- Look into [Prebuilt Extensions](https://jupyterlab.readthedocs.io/en/stable/extension/extension_dev.html#prebuilt-extensions). Here's [an example](https://github.com/jtpio/jupyterlab-topbar/blob/main/setup.py) and [another](https://pypi.org/project/jupyterlab-hide-code/).
+  -- Look into [Prebuilt Extensions](https://jupyterlab.readthedocs.io/en/stable/extension/extension_dev.html#prebuilt-extensions).
   -- [Common directories](https://jupyter.readthedocs.io/en/latest/use/jupyter-directories.html)
   -- [Jupyterlab directories](https://jupyterlab.readthedocs.io/en/stable/user/directories.html#jupyterlab-application-directory)
   -- `jupyter lab path`
   -- `jupyter --paths`
   -- `echo $JUPYTERLAB_DIR`
   -- [Extensions](https://github.com/jupyterlab/jupyterlab/blob/master/docs/source/user/extensions.rst#jupyterlab-application-directory)
-- Figure out using NixOS andJupyterHub.
+- Figure out using NixOS and JupyterHub.
   -- [Discourse item](https://discourse.nixos.org/t/anyone-has-a-working-jupyterhub-jupyter-lab-setup/7659/2).
   -- [Module options](https://search.nixos.org/options?channel=20.09&show=services.jupyterhub.enable&from=0&size=50&sort=relevance&query=jupyter)
   -- [Module source code](https://github.com/NixOS/nixpkgs/blob/nixos-20.09/nixos/modules/services/development/jupyterhub/default.nix)

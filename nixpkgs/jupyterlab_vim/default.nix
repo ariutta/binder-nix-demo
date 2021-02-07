@@ -1,14 +1,13 @@
 { lib
 , buildPythonPackage
 , fetchPypi
-, python
 , jupyterlab
 , jupyter_packaging
 , setuptools
 #, distutils
 , wheel
-, nodejs
-, nodePackages
+#, nodejs
+#, nodePackages
 }:
 
 # TODO: the standard setuptools build/install process fails.
@@ -27,25 +26,23 @@ buildPythonPackage rec {
     sha256 = "1frhk6k3f7xjw66bdr6zfxz1m3a1zfv8s192v2gq7v6g21p53kp6";
   };
 
-  nativeBuildInput = [ setuptools wheel nodePackages.typescript ];
+  #nativeBuildInput = [ setuptools wheel nodePackages.typescript ];
+  nativeBuildInput = [ setuptools wheel ];
   buildInputs = [ jupyter_packaging ];
-  propagatedBuildInputs = [ jupyterlab nodejs ];
+  #propagatedBuildInputs = [ jupyterlab nodejs ];
+  propagatedBuildInputs = [ jupyterlab ];
 
   doCheck = false;
 
   format = "other";
 
   buildPhase = ''
-    runHook preBuild
-
     mkdir -p "$out/lib/python3.8/site-packages"
     cp -r ./jupyterlab_vim "$out/lib/python3.8/site-packages/jupyterlab_vim"
 
     mkdir -p "$out/share/jupyter/labextensions/@axlair"
     cp -r ./jupyterlab_vim/labextension "$out/share/jupyter/labextensions/@axlair/jupyterlab_vim"
     cp ./install.json "$out/share/jupyter/labextensions/@axlair/jupyterlab_vim/install.json"
-
-    runHook postBuild
   '';
 
   installPhase = ''

@@ -13,11 +13,16 @@ let
     inherit nbclassic jupyter_packaging jupyter_server jupyterlab_server;
   };
   jupyter_lsp = pkgs.python3Packages.callPackage ./nixpkgs/jupyter_lsp/default.nix {
-    #inherit nbclassic jupyter_packaging jupyter_server jupyterlab_server;
     inherit jupyter_server;
   };
+  jupyter-resource-usage = pkgs.python3Packages.callPackage ./nixpkgs/jupyter-resource-usage/default.nix {
+    inherit jupyterlab;
+  };
+  jupyterlab-topbar = pkgs.python3Packages.callPackage ./nixpkgs/jupyterlab-topbar/default.nix {
+    inherit jupyterlab;
+  };
   packageOverrides = selfPythonPackages: pythonPackages: {
-    inherit json5 nbclassic jupyter_packaging jupyter_server jupyterlab_server jupyterlab jupyter_lsp;
+    inherit jupyter-resource-usage jupyterlab-topbar json5 nbclassic jupyter_packaging jupyter_server jupyterlab_server jupyterlab jupyter_lsp;
     jupyterlab-lsp = selfPythonPackages.callPackage ./nixpkgs/jupyterlab_lsp/default.nix {
       inherit jupyterlab jupyter_lsp;
     };
@@ -29,6 +34,15 @@ let
     };
     jupyterlab_vim = selfPythonPackages.callPackage ./nixpkgs/jupyterlab_vim/default.nix {
       inherit jupyterlab jupyter_packaging;
+    };
+    jupyterlab-vimrc = selfPythonPackages.callPackage ./nixpkgs/jupyterlab-vimrc/default.nix {
+      inherit jupyterlab;
+    };
+    aquirdturtle_collapsible_headings = selfPythonPackages.callPackage ./nixpkgs/aquirdturtle_collapsible_headings/default.nix {
+      inherit jupyterlab;
+    };
+    jupyterlab-system-monitor = selfPythonPackages.callPackage ./nixpkgs/jupyterlab-system-monitor/default.nix {
+      inherit jupyterlab jupyter-resource-usage jupyterlab-topbar;
     };
     jupyterlab-drawio = selfPythonPackages.callPackage ./nixpkgs/jupyterlab-drawio/default.nix {
       inherit jupyterlab;

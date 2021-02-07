@@ -1,5 +1,6 @@
 with builtins;
 let
+  #4
   # this corresponds to notebook_dir (impure)
   rootDirectoryImpure = toString ./.;
   shareDirectoryImpure = "${rootDirectoryImpure}/share-jupyter";
@@ -100,7 +101,7 @@ let
 
   irkernel = jupyter.kernels.iRWith {
     # Identifier that will appear on the Jupyter interface.
-    name = "mypkgs_on_IRkernel";
+    name = "pkgs_on_IRkernel";
     # Libraries to be available to the kernel.
     packages = myRPackages;
     # Optional definition of `rPackages` to be used.
@@ -129,7 +130,7 @@ let
   # It supports the jupyterlab debugger. But it's not packaged for nixos yet.
 
   iPython = jupyter.kernels.iPythonWith {
-    name = "mypkgs_on_IPython";
+    name = "pkgs_on_IPython";
     packages = p: with p; [
       ##############################
       # Packages to augment Jupyter
@@ -344,30 +345,15 @@ in
     mkdir -p "$JUPYTER_CONFIG_DIR/nbconfig/notebook.d"
     echo '{"load_extensions":{"jupyter-js-widgets/extension":true}}' >"$JUPYTER_CONFIG_DIR/nbconfig/notebook.d/widgetsnbextension.json"
 
-    #################
-    # lab extensions
-    #################
+    #################################
+    # symlink prebuilt lab extensions
+    #################################
 
     rm -rf "$JUPYTER_DATA_DIR/labextensions"
     mkdir -p "$JUPYTER_DATA_DIR/labextensions"
 
-    #----------------------------------
-    # symlink any source lab extensions
-    #----------------------------------
-
-    # A source lab extension is a raw JS package, and it must be compiled.
-    # If we wanted to install jupyterlab_hide_code this way, we could try:
-    #ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/share/jupyter/labextensions/jupyterlab-hide-code" "$JUPYTER_DATA_DIR/labextensions/jupyterlab_hide_code"
-    # Note that we'd have to run jupyter lab build for it to be available.
-    # As this is currently set up, we would need to delete ./share-jupyter/lab
-    # in order for the build to be run via this script.
-
-    #------------------------------------
-    # symlink any prebuilt lab extensions
-    #------------------------------------
-
-    # Note these are distributed via PyPI as "python" packages, even though
-    # they are really JS, HTML and CSS.
+    # Note the prebuilt lab extensions are distributed via PyPI as "python"
+    # packages, even though they are really JS, HTML and CSS.
     #
     # Symlink targets may generally use snake-case, but not always.
     #
@@ -388,15 +374,18 @@ in
     #   jupyterlab-hide-code v3.0.1 enabled OK
     # This difference could be due to the install.json being in share/...
 
+    ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/share/jupyter/labextensions/jupyterlab-hide-code" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-hide-code"
+
     # @axlair/jupyterlab_vim
     mkdir -p "$JUPYTER_DATA_DIR/labextensions/@axlair"
     ln -s "${pkgs.python3Packages.jupyterlab_vim}/lib/python3.8/site-packages/jupyterlab_vim/labextension" "$JUPYTER_DATA_DIR/labextensions/@axlair/jupyterlab_vim"
     # TODO: customize vim so 'jk' leaves insert mode
-    # https://github.com/ianhi/jupyterlab-vimrc/blob/master/src/yank.ts
+    # https://github.com/ianhi/jupyterlab-vimrc
     # https://github.com/jwkvam/jupyterlab-vim/issues/126
+    # https://github.com/jwkvam/jupyterlab-vim/issues/17#issuecomment-632903257
 
-    # jupyterlab-drawio
-    ln -s "${pkgs.python3Packages.jupyterlab-drawio}/lib/python3.8/site-packages/jupyterlab-drawio/labextension" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-drawio"
+    # jupyterlab-vimrc
+    ln -s "${pkgs.python3Packages.jupyterlab-vimrc}/lib/python3.8/site-packages/jupyterlab-vimrc" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-vimrc"
 
     # @krassowski/jupyterlab-lsp
     mkdir -p "$JUPYTER_DATA_DIR/labextensions/@krassowski"
@@ -406,23 +395,68 @@ in
     mkdir -p "$JUPYTER_DATA_DIR/labextensions/@ryantam626"
     ln -s "${pkgs.python3Packages.jupyterlab_code_formatter}/share/jupyter/labextensions/@ryantam626/jupyterlab_code_formatter" "$JUPYTER_DATA_DIR/labextensions/@ryantam626/jupyterlab_code_formatter"
 
-    if [ ! -d "$JUPYTERLAB_DIR" ]; then
-      mkdir -p "$JUPYTERLAB_DIR"
+    # jupyterlab-drawio
+    ln -s "${pkgs.python3Packages.jupyterlab-drawio}/lib/python3.8/site-packages/jupyterlab-drawio/labextension" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-drawio"
 
-      ####################
-      # build jupyter lab
-      ####################
+    # TODO: the following doesn't work at the moment
+#    # @aquirdturtle/collapsible_headings
+#    mkdir -p "$JUPYTER_DATA_DIR/labextensions/@aquirdturtle/collapsible_headings"
+#    ln -s "${pkgs.python3Packages.aquirdturtle_collapsible_headings}/share/jupyter/labextensions/@aquirdturtle/collapsible_headings" "$JUPYTER_DATA_DIR/labextensions/@aquirdturtle/collapsible_headings"
+
+    # TODO: check whether this works.
+#    # jupyterlab-system-monitor depends on jupyterlab-topbar and jupyter-resource-usage
+#
+#    # jupyterlab-topbar
+#    ln -s "${pkgs.python3Packages.jupyterlab-topbar}/lib/python3.8/site-packages/jupyterlab-topbar/labextension" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-topbar"
+#
+#    # jupyter-resource-usage
+#    ln -s "${pkgs.python3Packages.jupyter-resource-usage}/lib/python3.8/site-packages/jupyter-resource-usage/labextension" "$JUPYTER_DATA_DIR/labextensions/jupyter-resource-usage"
+#
+#    # jupyterlab-system-monitor
+#    ln -s "${pkgs.python3Packages.jupyterlab-system-monitor}/lib/python3.8/site-packages/jupyterlab-system-monitor/labextension" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-system-monitor"
+
+    if [ ! -d "$JUPYTERLAB_DIR" ]; then
+      # We are overwriting everything else, but we only run this section when
+      # "$JUPYTERLAB_DIR" is missing, because the build step is time intensive.
+
+      mkdir -p "$JUPYTERLAB_DIR"
+      mkdir -p "$JUPYTERLAB_DIR/staging"
+
+      #########################
+      # build jupyter lab alone
+      #########################
 
       # Note: we pipe stdout to stderr because otherwise $(cat "$\{dump\}")
       # would contain something that should not be evaluated.
-      # Look for 'eval $(cat "$\{dump\}")' in ./.envrc file.
+      # Look at 'eval $(cat "$\{dump\}")' in ./.envrc file.
+
+      chmod -R +w "$JUPYTERLAB_DIR/staging/"
       jupyter lab build 1>&2
 
-      # TODO: is the following ever needed? I used to think it was needed when
-      # we wanted to install any source lab extensions.
-      #chmod -R +w "${jupyterlabDirectoryImpure}/staging/"
-      #jupyter lab build 2>&1
-      #chmod -R -w "${jupyterlabDirectoryImpure}/staging/"
+      ###########################
+      # add source lab extensions
+      ###########################
+
+      # A source lab extension is a raw JS package, and it must be compiled.
+
+      # https://github.com/arbennett/jupyterlab-themes
+      chmod -R +w "$JUPYTERLAB_DIR/staging/"
+      jupyter labextension install --no-build @arbennett/base16-gruvbox-dark 1>&2
+      chmod -R +w "$JUPYTERLAB_DIR/staging/"
+      jupyter labextension install --no-build @arbennett/base16-gruvbox-light 1>&2
+
+      ############################################
+      # build jupyter lab w/ source lab extensions
+      ############################################
+
+      # It would be nice to be able to just build once here at the end, but the
+      # build process appears to fail unless I build once for jupyter lab alone
+      # then again after adding source lab extensions.
+
+      chmod -R +w "$JUPYTERLAB_DIR/staging/"
+      jupyter lab build 1>&2
+
+      chmod -R -w "$JUPYTERLAB_DIR/staging/"
     fi
 
     ###########
@@ -434,11 +468,15 @@ in
     # TODO: one setting is '"theme": "inherit"'. Where does it inherit from?
     # is it @jupyterlab/apputils-extension:themes.theme?
 
-    if [ ! -f "$JUPYTERLAB_DIR/settings/overrides.json" ]; then
-      mkdir -p "$JUPYTERLAB_DIR/settings"
-      echo '{"@jupyterlab/apputils-extension:themes": {"theme": "JupyterLab Dark"}, "@jupyterlab/terminal-extension:plugin":{"fontFamily":"Meslo LG S DZ for Powerline,monospace"}}' >"$JUPYTER_DATA_DIR/lab/settings/overrides.json"
-    else
-      echo "File aleady exists: $JUPYTERLAB_DIR/settings/overrides.json! Cannot set overrides." 1>&2
-    fi
+    mkdir -p "$JUPYTERLAB_DIR/settings"
+    touch "$JUPYTERLAB_DIR/settings/overrides.json"
+    rm "$JUPYTERLAB_DIR/settings/overrides.json"
+    echo '{"jupyterlab-vimrc:vimrc": {"imap": [["jk", "<Esc>"]]}, "@jupyterlab/apputils-extension:themes": {"theme": "base16-gruvbox-dark"}, "@jupyterlab/terminal-extension:plugin":{"fontFamily":"Meslo LG S DZ for Powerline,monospace"}}' >"$JUPYTER_DATA_DIR/lab/settings/overrides.json"
+
+    # Setting for tab manager being on the right is something like this:
+    # "@jupyterlab/application-extension:sidebar": {"overrides": {"tab-manager": "right"}}
+    #
+    # "@jupyterlab/extensionmanager-extension:plugin": {"enabled": false}
+    #
     '';
   })

@@ -6,13 +6,13 @@
 }:
 
 buildPythonPackage rec {
-  pname = "jupyterlab-drawio";
-  version = "0.8.0";
+  pname = "aquirdturtle_collapsible_headings";
+  version = "3.0.1";
   name = "${pname}-${version}";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "02c056nlvnap8fz52ksjyqm933rlqwa2zzv2a3v2b70cs224gidg";
+    sha256 = "15zbbp7zhvx4a3z6y372k9kby6hfsd7psc0q6j3nkwkxi529dmjl";
   };
 
   doCheck = true;
@@ -20,8 +20,8 @@ buildPythonPackage rec {
   propagatedBuildInputs = [ jupyterlab ];
 
   meta = with lib; {
-    description = "A JupyterLab extension for embedding drawio / mxgraph.";
-    homepage = "https://pypi.org/project/jupyterlab-drawio/";
+    description = "Make headings collapsible like the old Jupyter notebook extension and like mathematica notebooks.";
+    homepage = "https://pypi.org/project/aquirdturtle-collapsible-headings/";
     license = licenses.bsd3;
     maintainers = [];
   };

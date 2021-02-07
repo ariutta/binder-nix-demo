@@ -6,13 +6,13 @@
 }:
 
 buildPythonPackage rec {
-  pname = "jupyterlab-drawio";
-  version = "0.8.0";
+  pname = "jupyterlab-topbar";
+  version = "0.6.1";
   name = "${pname}-${version}";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "02c056nlvnap8fz52ksjyqm933rlqwa2zzv2a3v2b70cs224gidg";
+    sha256 = "0pzv4sba9khqh3mfwj4wgnb61935dkr651ip3y9bhacws17i9ygi";
   };
 
   doCheck = true;
@@ -20,8 +20,8 @@ buildPythonPackage rec {
   propagatedBuildInputs = [ jupyterlab ];
 
   meta = with lib; {
-    description = "A JupyterLab extension for embedding drawio / mxgraph.";
-    homepage = "https://pypi.org/project/jupyterlab-drawio/";
+    description = "JupyterLab extension to expose the top bar space.";
+    homepage = "https://pypi.org/project/jupyterlab-topbar/";
     license = licenses.bsd3;
     maintainers = [];
   };
