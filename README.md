@@ -1,6 +1,58 @@
 # binder-nix-demo
 
-minimal example of using nix w/ mybinder.org
+Demo of using Nix, Jupyterlab and mybinder.org, featuring:
+
+- jupyterWith
+- R (see demo.R.ipynb) and Python (see demo.py.ipynb), with multiple packages for each installed
+- Multiple types of extensions: server extensions, prebuilt lab extensions and source lab extensions
+- Vim and vimrc (jupyterlab_vim & jupyterlab-vimrc)
+- gruvbox themes (@arbennett/base16-gruvbox-dark & @arbennett/base16-gruvbox-light)
+- Language servers for both R and Python (jupyter-lsp & jupyterlab-lsp)
+- Code formatting for Python via nb_black and for Python and R via jupyterlab_code_formatter
+- 'Hide Code' button
+- DrawIO integration
+- Jupytext
+- Additional tools in the environment like ImageMagick
+
+## Vim
+
+[jupyterlab-vimrc](http://pypi.org/project/jupyterlab-vimrc) enables us to save settings for vim.
+
+### Mapping
+
+- `map`: all modes
+- `nmap`: normal mode
+- `vmap`: visual mode
+- `imap`: insert mode
+
+`iunmap` should unmap/clear a previously set `imap`, but it doesn't seem to work in here.
+
+- `:map <Space> viw` works to make space select the word under the cursor.
+- `:map <space> viw` does not work.
+
+- `:imap jk <Esc>` works to make `jk` leave insert mode.
+
+`:imap <c-d> <Esc>ddi` means, in insert mode, "Ctrl-d" ("Command-d" on Mac) deletes the current line.
+
+## TODO
+
+- Get my jupyterlab extensions (JS) working. Related: [what jupyterWith says](https://github.com/tweag/jupyterWith#using-jupyterlab-extensions) about how they do this and [why](https://github.com/tweag/jupyterWith#about-extensions).
+  -- Look into [Prebuilt Extensions](https://jupyterlab.readthedocs.io/en/stable/extension/extension_dev.html#prebuilt-extensions).
+  -- [Common directories](https://jupyter.readthedocs.io/en/latest/use/jupyter-directories.html)
+  -- [Jupyterlab directories](https://jupyterlab.readthedocs.io/en/stable/user/directories.html#jupyterlab-application-directory)
+  -- `jupyter lab path`
+  -- `jupyter --paths`
+  -- `echo $JUPYTERLAB_DIR`
+  -- [Extensions](https://github.com/jupyterlab/jupyterlab/blob/master/docs/source/user/extensions.rst#jupyterlab-application-directory)
+- Figure out using NixOS and JupyterHub.
+  -- [Discourse item](https://discourse.nixos.org/t/anyone-has-a-working-jupyterhub-jupyter-lab-setup/7659/2).
+  -- [Module options](https://search.nixos.org/options?channel=20.09&show=services.jupyterhub.enable&from=0&size=50&sort=relevance&query=jupyter)
+  -- [Module source code](https://github.com/NixOS/nixpkgs/blob/nixos-20.09/nixos/modules/services/development/jupyterhub/default.nix)
+  -- [Issue for Jupyter init service](https://github.com/NixOS/nixpkgs/pull/33673k)
+
+- What exactly does it mean to [use it as an overlay](https://github.com/tweag/jupyterWith#using-as-an-overlay)?
+
+## Scratchpad for Notes
 
 ```
 nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs &&     nix-channel --update &&             nix-shell default.nix
@@ -26,26 +78,6 @@ overlays = [(import ./python-overlay.nix)]
 pkgs = import <nixpkgs> { inherit overlays; }
 :b pkgs.python3Packages.callPackage ./nixpkgs/jupyter_server/default.nix {}
 ```
-
-TODO:
-
-- Get my jupyterlab extensions (JS) working. Related: [what jupyterWith says](https://github.com/tweag/jupyterWith#using-jupyterlab-extensions) about how they do this and [why](https://github.com/tweag/jupyterWith#about-extensions).
-  -- Look into [Prebuilt Extensions](https://jupyterlab.readthedocs.io/en/stable/extension/extension_dev.html#prebuilt-extensions).
-  -- [Common directories](https://jupyter.readthedocs.io/en/latest/use/jupyter-directories.html)
-  -- [Jupyterlab directories](https://jupyterlab.readthedocs.io/en/stable/user/directories.html#jupyterlab-application-directory)
-  -- `jupyter lab path`
-  -- `jupyter --paths`
-  -- `echo $JUPYTERLAB_DIR`
-  -- [Extensions](https://github.com/jupyterlab/jupyterlab/blob/master/docs/source/user/extensions.rst#jupyterlab-application-directory)
-- Figure out using NixOS and JupyterHub.
-  -- [Discourse item](https://discourse.nixos.org/t/anyone-has-a-working-jupyterhub-jupyter-lab-setup/7659/2).
-  -- [Module options](https://search.nixos.org/options?channel=20.09&show=services.jupyterhub.enable&from=0&size=50&sort=relevance&query=jupyter)
-  -- [Module source code](https://github.com/NixOS/nixpkgs/blob/nixos-20.09/nixos/modules/services/development/jupyterhub/default.nix)
-  -- [Issue for Jupyter init service](https://github.com/NixOS/nixpkgs/pull/33673k)
-
-- What exactly does it mean to [use it as an overlay](https://github.com/tweag/jupyterWith#using-as-an-overlay)?
-
-NOTES
 
 See which ports are in use:
 

@@ -88,6 +88,7 @@ let
 
     # not for Jupyter
     pacman
+    tidyverse
     dplyr
     ggplot2
     knitr
