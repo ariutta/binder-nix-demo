@@ -1,6 +1,6 @@
 with builtins;
 let
-  # 20
+  # 21
   # terminal setting to make the Powerline prompt look OK:
   # {"fontFamily": "Meslo LG S DZ for Powerline,monospace"}
 
@@ -34,9 +34,9 @@ let
   # Your Nixpkgs snapshot, with JupyterWith packages.
   pkgs = import <nixpkgs> { inherit overlays; };
 
-  myExternalPython = (pkgs.python3.withPackages (ps: with ps; [ 
-    # I have to put these here so that jupyter can load them
-    # as server extensions.
+  jupyterExtraPython = (pkgs.python3.withPackages (ps: with ps; [ 
+    # Declare all server extensions in here, plus anything else needed.
+
     jupyter_lsp
     # jupyterlab-lsp must be specified here in order for the LSP for R to work.
     jupyterlab-lsp
@@ -116,10 +116,6 @@ let
       # One difference: this uses python magics (%), whereas jupyterlab_code_formatter
       # is an extension.
 
-      #black
-      #isort
-      #autopep8
-
       # similar question for nbconvert
       nbconvert
 
@@ -190,25 +186,11 @@ let
         # more info: https://nixos.wiki/wiki/TexLive
         p.texlive.combined.scheme-full
 
-        myExternalPython
+        jupyterExtraPython
 
-#        # I have to put these here so that jupyter can load them
-#        # as server extensions.
-        #p.python3Packages.jupyter_lsp
         # jupyterlab-lsp must be specified here in order for the LSP for R to work.
-        #p.python3Packages.jupyterlab-lsp
-        #p.python3Packages.python-language-server
-#
-#        # TODO: jupyterlab_code_formatter isn't working correctly.
-#        # It claims black and autopep8 aren't installed, even though they are.
-#        # And when I try isort as formatter, it does nothing.
-#        p.python3Packages.jupyterlab_code_formatter
-#        p.python3Packages.black
-#        p.python3Packages.isort
-#        p.python3Packages.autopep8
-#
-#        p.python3Packages.jupytext
-#        p.python3Packages.jupyter_packaging
+        # TODO: why isn't it enough that this is specified in jupyterExtraPython?
+        p.python3Packages.jupyterlab-lsp
 
         # TODO: these dependencies are only required when it's necessary to
         # build a lab extension for from source.
@@ -235,17 +217,7 @@ let
       # TODO: how do we know it's python3.8 instead of another version like python3.9?
       extraJupyterPath = pkgs:
         concatStringsSep ":" [
-          "${myExternalPython}/lib/python3.8/site-packages"
-          #"${pkgs.python3Packages.python-language-server}/lib/python3.8/site-packages"
-          #"${pkgs.python3Packages.jupyter_lsp}/lib/python3.8/site-packages"
-          #"${pkgs.python3Packages.jupyterlab_code_formatter}/lib/python3.8/site-packages"
-
-          #"${pkgs.python3Packages.jupytext}/lib/python3.8/site-packages"
-          #"${pkgs.black}/lib/python3.8/site-packages"
-          #"${pkgs.python3Packages.black}/lib/python3.8/site-packages"
-          #"${pkgs.python3Packages.isort}/lib/python3.8/site-packages"
-          #"${pkgs.python3Packages.autopep8}/lib/python3.8/site-packages"
-          #"${pkgs.rPackages.languageserver}/library/languageserver/R/languageserver"
+          "${jupyterExtraPython}/lib/python3.8/site-packages"
         ];
     };
 in
@@ -270,6 +242,7 @@ in
         echo "Cannot find a valid SSL certificate file. curl will not work." 1>&2
       fi
     fi
+    # TODO: is the following line ever useful?
     #export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
 
     # set SOURCE_DATE_EPOCH so that we can use python wheels
@@ -339,8 +312,6 @@ in
     mkdir -p "$JUPYTER_CONFIG_DIR/nbconfig/notebook.d"
     echo '{"load_extensions":{"jupyter-js-widgets/extension":true}}' >"$JUPYTER_CONFIG_DIR/nbconfig/notebook.d/widgetsnbextension.json"
 
-    ln -s "${myExternalPython}" "./myExternalPythonhey"
-
     #################
     # lab extensions
     #################
@@ -352,9 +323,12 @@ in
     # symlink any source lab extensions
     #----------------------------------
 
-    # An example of how we could install jupyterlab_hide_code as a source
-    # extension (basically an un-built NPM package that must be compiled):
+    # A source lab extension is a raw JS package, and it must be compiled.
+    # If we wanted to install jupyterlab_hide_code this way, we could try:
     #ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/share/jupyter/labextensions/jupyterlab-hide-code" "$JUPYTER_DATA_DIR/labextensions/jupyterlab_hide_code"
+    # Note that we'd have to run jupyter lab build for it to be available.
+    # As this is currently set up, we would need to delete ./share-jupyter/lab
+    # in order for the build to be run via this script.
 
     #------------------------------------
     # symlink any prebuilt lab extensions
@@ -362,32 +336,23 @@ in
 
     # Note these are distributed via PyPI as "python" packages, even though
     # they are really JS, HTML and CSS.
+    #
+    # The symlink target will generally use snake-case, but maybe not always.
+    #
+    # The lab extension code appears to be in two places in the python packge:
+    # - lib/python3.8/site-packages/snake_case_pkg_name/labextension
+    # - share/jupyter/labextensions/dash-case-pkg-name
+    # These directories are identical, except share/... has file install.json.
 
     # jupyterlab_hide_code
     #
-    # The lab extension code appears to be duplicated in the built python pkg.
-    # The following two dirs are identical, except share has install.json.
-    #
-    # * lib/python3.8/site-packages/jupyterlab_hide_code/labextension
-    # * share/jupyter/labextensions/jupyterlab-hide-code
-    #
     # When the symlink target is 'jupyterlab-hide-code' (dash case), the lab extension
-    # works, regardless of whether the source is lib/...:
-    #ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/lib/python3.8/site-packages/jupyterlab_hide_code/labextension" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-hide-code"
-    # or share/...:
-    ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/share/jupyter/labextensions/jupyterlab-hide-code" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-hide-code"
-    #
-    # But when the symlink target is 'jupyterlab_hide_code' (snake_case), the
-    # lab extension doesn't work. This is true regardless of whether the
-    # source is lib/...:
-    #ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/share/jupyter/labextensions/jupyterlab-hide-code" "$JUPYTER_DATA_DIR/labextensions/jupyterlab_hide_code"
-    # or share/...:
-    #ln -s "${pkgs.python3Packages.jupyterlab_hide_code}/share/jupyter/labextensions/jupyterlab-hide-code" "$JUPYTER_DATA_DIR/labextensions/jupyterlab_hide_code"
+    # works, but not when the symlink target is 'jupyterlab_hide_code' (snake_case).
     #
     # When using target share/..., the command 'jupyter-labextension list'
     # adds some extra info to the end:
     #   jupyterlab-hide-code v3.0.1 enabled OK (python, jupyterlab_hide_code)
-    # This is what we get when using target lib/...:
+    # When using target lib/..., we get just this:
     #   jupyterlab-hide-code v3.0.1 enabled OK
     # This difference could be due to the install.json being in share/...
 
@@ -395,20 +360,16 @@ in
     mkdir -p "$JUPYTER_DATA_DIR/labextensions/@axlair"
     ln -s "${pkgs.python3Packages.jupyterlab_vim}/lib/python3.8/site-packages/jupyterlab_vim/labextension" "$JUPYTER_DATA_DIR/labextensions/@axlair/jupyterlab_vim"
 
-    # @krassowski/jupyter-lsp
-    #mkdir -p "$JUPYTER_DATA_DIR/labextensions/@krassowski"
-    #ln -s "${pkgs.python3Packages.jupyter_lsp}/share/jupyter/labextensions/@krassowski/jupyter-lsp" "$JUPYTER_DATA_DIR/labextensions/@krassowski/jupyter-lsp"
-
     # @krassowski/jupyterlab-lsp
     mkdir -p "$JUPYTER_DATA_DIR/labextensions/@krassowski"
     ln -s "${pkgs.python3Packages.jupyterlab-lsp}/share/jupyter/labextensions/@krassowski/jupyterlab-lsp" "$JUPYTER_DATA_DIR/labextensions/@krassowski/jupyterlab-lsp"
 
     # @ryantam626/jupyterlab_code_formatter
+    # The lab extension appears to load OK, but it returns 404 when I try to
+    # format some code.
+    # I also tried dash-case for the target, but that didn't work at all.
+    #
     mkdir -p "$JUPYTER_DATA_DIR/labextensions/@ryantam626"
-    # this doesn't work:
-    ln -s "${pkgs.python3Packages.jupyterlab_code_formatter}/share/jupyter/labextensions/@ryantam626/jupyterlab_code_formatter" "$JUPYTER_DATA_DIR/labextensions/@ryantam626/jupyterlab-code-formatter"
-    # these two sort of work, except they both 404 when trying to actually format some code
-    #ln -s "${pkgs.python3Packages.jupyterlab_code_formatter}/lib/python3.8/site-packages/jupyterlab_code_formatter/labextension" "$JUPYTER_DATA_DIR/labextensions/@ryantam626/jupyterlab_code_formatter";
     ln -s "${pkgs.python3Packages.jupyterlab_code_formatter}/share/jupyter/labextensions/@ryantam626/jupyterlab_code_formatter" "$JUPYTER_DATA_DIR/labextensions/@ryantam626/jupyterlab_code_formatter"
 
     if [ ! -d "$JUPYTERLAB_DIR" ]; then
