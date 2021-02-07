@@ -30,6 +30,9 @@ let
     jupyterlab_vim = selfPythonPackages.callPackage ./nixpkgs/jupyterlab_vim/default.nix {
       inherit jupyterlab jupyter_packaging;
     };
+    jupyterlab-drawio = selfPythonPackages.callPackage ./nixpkgs/jupyterlab-drawio/default.nix {
+      inherit jupyterlab;
+    };
     nb_black = selfPythonPackages.callPackage ./nixpkgs/nb_black/default.nix {};
     seaborn = selfPythonPackages.callPackage ./nixpkgs/seaborn/default.nix {};
     skosmos_client = selfPythonPackages.callPackage ./nixpkgs/skosmos_client/default.nix {};

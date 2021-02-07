@@ -1,9 +1,5 @@
 with builtins;
 let
-  # 21
-  # terminal setting to make the Powerline prompt look OK:
-  # {"fontFamily": "Meslo LG S DZ for Powerline,monospace"}
-
   # this corresponds to notebook_dir (impure)
   rootDirectoryImpure = toString ./.;
   shareDirectoryImpure = "${rootDirectoryImpure}/share-jupyter";
@@ -37,20 +33,43 @@ let
   jupyterExtraPython = (pkgs.python3.withPackages (ps: with ps; [ 
     # Declare all server extensions in here, plus anything else needed.
 
-    jupyter_lsp
-    # jupyterlab-lsp must be specified here in order for the LSP for R to work.
-    jupyterlab-lsp
-    python-language-server
+    #-----------------
+    # Language Server
+    #-----------------
 
-    # TODO: jupyterlab_code_formatter isn't working correctly.
-    # It claims black and autopep8 aren't installed, even though they are.
-    # And when I try isort as formatter, it does nothing.
+    jupyter_lsp
+
+    # Even when it's specified here, we also need to specify it in
+    # jupyterEnvironment.extraPackages for the LS for R to work.
+    # TODO: why?
+    jupyterlab-lsp
+    # jupyterlab-lsp also supports other languages:
+    # https://jupyterlab-lsp.readthedocs.io/en/latest/Language%20Servers.html#NodeJS-based-Language-Servers
+
+    # The formatter for Python code is working, but formatR for R code is not.
+
+    python-language-server
+    rope
+    pyflakes
+    mccabe
+    # others also available
+
+    #-----------------
+    # Code Formatting
+    #-----------------
+
     jupyterlab_code_formatter
     black
     isort
     autopep8
 
+    #-----------------
+    # Other
+    #-----------------
+
     jupytext
+
+    # TODO: is this needed here?
     jupyter_packaging
   ]));
 
@@ -62,8 +81,11 @@ let
   #########################
 
   myRPackages = p: with p; [
+    # for Jupyter
     formatR
     languageserver
+
+    # not for Jupyter
     pacman
     dplyr
     ggplot2
@@ -78,7 +100,7 @@ let
 
   irkernel = jupyter.kernels.iRWith {
     # Identifier that will appear on the Jupyter interface.
-    name = "irkernel_with_packages";
+    name = "mypkgs_on_IRkernel";
     # Libraries to be available to the kernel.
     packages = myRPackages;
     # Optional definition of `rPackages` to be used.
@@ -86,7 +108,7 @@ let
     rPackages = pkgs.rPackages;
   };
 
-#  # juniper doesn't work anymore, it appears
+#  # It appears juniper doesn't work anymore
 #  juniper = jupyter.kernels.juniperWith {
 #    # Identifier that will appear on the Jupyter interface.
 #    name = "JuniperKernel";
@@ -107,19 +129,27 @@ let
   # It supports the jupyterlab debugger. But it's not packaged for nixos yet.
 
   iPython = jupyter.kernels.iPythonWith {
-    name = "iPython_with_packages";
+    name = "mypkgs_on_IPython";
     packages = p: with p; [
-      # TODO: nb_black is a 'python magic', not a serverextension. Since it is
-      # intended for only for augmenting jupyter, where should I specify it?
-      nb_black
-      # TODO: compare nb_black with https://github.com/ryantam626/jupyterlab_code_formatter
-      # One difference: this uses python magics (%), whereas jupyterlab_code_formatter
-      # is an extension.
+      ##############################
+      # Packages to augment Jupyter
+      ##############################
 
-      # similar question for nbconvert
+      # TODO: nb_black is a 'python magic', not a server extension. Since it is
+      # intended only for augmenting jupyter, where should I specify it?
+      nb_black
+
+      # TODO: for code formatting, compare nb_black with jupyterlab_code_formatter.
+      # One difference:
+      # nb_black is an IPython Magic (%), whereas
+      # jupyterlab_code_formatter is a combo lab & server extension.
+
+      # similar question for nbconvert: where should we specify it?
       nbconvert
 
-      # non-Jupyter-specific packages
+      ################################
+      # Non-Jupyter-specific packages
+      ################################
 
       numpy
       pandas
@@ -179,28 +209,29 @@ let
 
         mynixpkgs.jupyterlab-connect
 
-        # for nbconvert
+        # needed by nbconvert
         p.pandoc
         # see https://github.com/jupyter/nbconvert/issues/808
         #tectonic
         # more info: https://nixos.wiki/wiki/TexLive
         p.texlive.combined.scheme-full
 
-        jupyterExtraPython
-
-        # jupyterlab-lsp must be specified here in order for the LSP for R to work.
-        # TODO: why isn't it enough that this is specified in jupyterExtraPython?
-        p.python3Packages.jupyterlab-lsp
-
-        # TODO: these dependencies are only required when it's necessary to
-        # build a lab extension for from source.
+        # TODO: these dependencies are only required when want to build a lab
+        # extension from source.
         # Does jupyterWith allow me to specify them as buildInputs?
         p.nodejs
         p.yarn
 
-        #################################
+        # jupyterlab-lsp must be specified here in order for the LSP for R to work.
+        # TODO: why isn't it enough that this is specified for jupyterExtraPython?
+        p.python3Packages.jupyterlab-lsp
+
+        # Note: has packages for augmenting Jupyter and for other purposes.
+        jupyterExtraPython
+
+        ################################
         # non-Jupyter-specific packages
-        #################################
+        ################################
 
         p.imagemagick
 
@@ -214,10 +245,11 @@ let
         p.blockhash
       ];
 
-      # TODO: how do we know it's python3.8 instead of another version like python3.9?
       extraJupyterPath = pkgs:
         concatStringsSep ":" [
-          "${jupyterExtraPython}/lib/python3.8/site-packages"
+          "${jupyterExtraPython}/lib/${jupyterExtraPython.libPrefix}/site-packages"
+          "${pkgs.rPackages.formatR}/library/formatR/R"
+          "${pkgs.rPackages.languageserver}/library/languageserver/R"
         ];
     };
 in
@@ -337,11 +369,11 @@ in
     # Note these are distributed via PyPI as "python" packages, even though
     # they are really JS, HTML and CSS.
     #
-    # The symlink target will generally use snake-case, but maybe not always.
+    # Symlink targets may generally use snake-case, but not always.
     #
     # The lab extension code appears to be in two places in the python packge:
-    # - lib/python3.8/site-packages/snake_case_pkg_name/labextension
-    # - share/jupyter/labextensions/dash-case-pkg-name
+    # 1) lib/python3.8/site-packages/snake_case_pkg_name/labextension
+    # 2) share/jupyter/labextensions/dash-case-pkg-name
     # These directories are identical, except share/... has file install.json.
 
     # jupyterlab_hide_code
@@ -359,16 +391,18 @@ in
     # @axlair/jupyterlab_vim
     mkdir -p "$JUPYTER_DATA_DIR/labextensions/@axlair"
     ln -s "${pkgs.python3Packages.jupyterlab_vim}/lib/python3.8/site-packages/jupyterlab_vim/labextension" "$JUPYTER_DATA_DIR/labextensions/@axlair/jupyterlab_vim"
+    # TODO: customize vim so 'jk' leaves insert mode
+    # https://github.com/ianhi/jupyterlab-vimrc/blob/master/src/yank.ts
+    # https://github.com/jwkvam/jupyterlab-vim/issues/126
+
+    # jupyterlab-drawio
+    ln -s "${pkgs.python3Packages.jupyterlab-drawio}/lib/python3.8/site-packages/jupyterlab-drawio/labextension" "$JUPYTER_DATA_DIR/labextensions/jupyterlab-drawio"
 
     # @krassowski/jupyterlab-lsp
     mkdir -p "$JUPYTER_DATA_DIR/labextensions/@krassowski"
     ln -s "${pkgs.python3Packages.jupyterlab-lsp}/share/jupyter/labextensions/@krassowski/jupyterlab-lsp" "$JUPYTER_DATA_DIR/labextensions/@krassowski/jupyterlab-lsp"
 
     # @ryantam626/jupyterlab_code_formatter
-    # The lab extension appears to load OK, but it returns 404 when I try to
-    # format some code.
-    # I also tried dash-case for the target, but that didn't work at all.
-    #
     mkdir -p "$JUPYTER_DATA_DIR/labextensions/@ryantam626"
     ln -s "${pkgs.python3Packages.jupyterlab_code_formatter}/share/jupyter/labextensions/@ryantam626/jupyterlab_code_formatter" "$JUPYTER_DATA_DIR/labextensions/@ryantam626/jupyterlab_code_formatter"
 
@@ -389,6 +423,22 @@ in
       #chmod -R +w "${jupyterlabDirectoryImpure}/staging/"
       #jupyter lab build 2>&1
       #chmod -R -w "${jupyterlabDirectoryImpure}/staging/"
+    fi
+
+    ###########
+    # Settings
+    ###########
+
+    # Specify a font for the Terminal to make the Powerline prompt look OK.
+    # TODO: should we install the fonts as part of this Nix definition?
+    # TODO: one setting is '"theme": "inherit"'. Where does it inherit from?
+    # is it @jupyterlab/apputils-extension:themes.theme?
+
+    if [ ! -f "$JUPYTERLAB_DIR/settings/overrides.json" ]; then
+      mkdir -p "$JUPYTERLAB_DIR/settings"
+      echo '{"@jupyterlab/apputils-extension:themes": {"theme": "JupyterLab Dark"}, "@jupyterlab/terminal-extension:plugin":{"fontFamily":"Meslo LG S DZ for Powerline,monospace"}}' >"$JUPYTER_DATA_DIR/lab/settings/overrides.json"
+    else
+      echo "File aleady exists: $JUPYTERLAB_DIR/settings/overrides.json! Cannot set overrides." 1>&2
     fi
     '';
   })

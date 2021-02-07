@@ -2,6 +2,8 @@
 , buildPythonPackage
 , fetchPypi
 , jupyterlab
+, R
+, rPackages
 }:
 
 buildPythonPackage rec {
@@ -15,9 +17,7 @@ buildPythonPackage rec {
   };
 
   doCheck = true;
-  buildInputs = [];
-  # should isort and black be included here?
-  propagatedBuildInputs = [ jupyterlab ];
+  propagatedBuildInputs = [ jupyterlab R rPackages.formatR ];
 
   meta = with lib; {
     description = "Code formatter for JupyterLab.";

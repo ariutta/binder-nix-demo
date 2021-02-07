@@ -49,59 +49,7 @@ buildPythonPackage rec {
   '';
 
   installPhase = ''
-    echo "installPhase"
-  '';
-
-#  preBuild = ''
-#    echo "preBuild"
-#    ls -lah ./
-#    echo "$out"
-#    pwd
-#    #exit 1
-#    #ls -lah $out
-#
-#    mkdir $out
-#
-#    PATH="${jupyterlab}/bin:$PATH"
-#    PATH="${nodejs}/bin:$PATH"
-#    PATH="${nodePackages.typescript}/bin:$PATH"
-#
-#    rm tsconfig.json
-#    #tsc --lib 'ES5,ES2015,ES2016,ES2017,ES2018,ESNext,DOM,ES6,DOM.Iterable,ScriptHost' --skipLibCheck --suppressExcessPropertyErrors --suppressImplicitAnyIndexErrors --noStrictGenericChecks ./src/*.ts
-#    tsc --lib ES2015 --suppressExcessPropertyErrors --suppressImplicitAnyIndexErrors --noStrictGenericChecks ./src/*.ts
-#    #tsc --suppressImplicitAnyIndexErrors ./src/*.ts
-#    #"jlpm run build:lib && jlpm run build:labextension"
-#    #jlpm run 'build:prod'
-#    ls -lah ./
-#    exit 1
-#
-#    cp -r ./ $out/
-#
-#    ${python.interpreter} setup.py bdist_wheel
-#
-#    #${python.interpreter} setup.py install_data --install-dir=$out --root=$out
-#    #sed -i '/ = data\_files/d' setup.py
-#  '';
-
-#  pipBuildHook = ''
-#    echo "pipBuildHook"
-#    ls -lah ./
-#    echo "$out"
-#    exit 1
-#  '';
-
-#  postBuild = ''
-#    echo "postBuild"
-#    ls -lah ./
-#    ls -lah $out
-#    exit 1
-#  '';
-
-  preInstall = ''
-    echo "preInstall"
-    ls -lah ./
-    ls -lah $out
-    #exit 1
+    echo "installPhase" 1>&2
   '';
 
   meta = with lib; {
